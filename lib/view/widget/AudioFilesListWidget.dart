@@ -27,7 +27,11 @@ class _AudioFilesListWidgetState extends State<AudioFilesListWidget> {
     final directory = (await getApplicationDocumentsDirectory()).path + '/midi/';
     Directory(directory).createSync(recursive: true);
     Log.v(LogTag.API, 'Listing files from directory $directory');
-    return io.Directory(directory).listSync();
+    return io.Directory(directory).listSync().where((file) {
+//      FileSystemEntityType type = await FileSystemEntity.type(file.path);
+//      return type == FileSystemEntityType.file;
+      return file.path.endsWith('.mid');
+    }).toList();
   }
 
   @override

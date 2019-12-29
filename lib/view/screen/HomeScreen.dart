@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:play_music_along/bloc/bloc.dart';
 import 'package:play_music_along/view/widget/AudioFilesListWidget.dart';
 import 'package:play_music_along/view/widget/CustomScaffoldBody.dart';
 import 'package:play_music_along/view/widget/SliverHeader.dart';
@@ -22,12 +21,10 @@ class _HomeScreenState extends State<HomeScreen> {
           child: CustomScrollView(
             controller: _scrollController,
             slivers: <Widget>[
-              BlocBuilder<UserBloc, UserState>(builder: (context, state) {
-                return SliverHeader(
-                        title:
-                        'List of audio files'
-                    );
-              }),
+              SliverHeader(
+                  title:
+                  'List of audio files'
+              ),
               SliverPadding(
                 padding: const EdgeInsets.only(
                     left: 25.0, top: 30.0, right: 25.0),
