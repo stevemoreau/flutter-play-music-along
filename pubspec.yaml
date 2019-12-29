@@ -1,0 +1,85 @@
+name: play_music_along
+description: An application to play audio files with real-time instrument rendering
+
+# The following defines the version and build number for your application.
+# A version number is three numbers separated by dots, like 1.2.43
+# followed by an optional build number separated by a +.
+# Both the version and the builder number may be overridden in flutter
+# build by specifying --build-name and --build-number, respectively.
+# In Android, build-name is used as versionName while build-number used as versionCode.
+# Read more about Android versioning at https://developer.android.com/studio/publish/versioning
+# In iOS, build-name is used as CFBundleShortVersionString while build-number used as CFBundleVersion.
+# Read more about iOS versioning at
+# https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
+version: 0.1.0+1
+
+environment:
+  sdk: ">=2.1.0 <3.0.0"
+
+dependencies:
+  # The following adds the Cupertino Icons font to your application.
+  # Use with the CupertinoIcons class for iOS style icons.
+  cupertino_icons: ^0.1.2
+  flutter:
+    sdk: flutter
+  json_annotation: ^3.0.0
+
+dev_dependencies:
+  ansicolor: ^1.0.2
+  archive: ^2.0.10
+  build_runner: ^1.0.0
+  equatable: ^0.4.0
+  http: ^0.12.0+2
+  firebase_core: ^0.4.0+6
+  firebase_analytics: ^3.0.3
+  flutter_bloc: ^0.20.1
+  flutter_crashlytics: ^1.0.0
+  flutter_localizations:
+    sdk: flutter
+  flutter_test:
+    sdk: flutter
+  fluttertoast: ^3.1.3
+  font_awesome_flutter: ^8.2.0
+  intl: ^0.16.0
+  logging: ^0.11.3+2
+  path_provider: ^1.5.1
+  pigment: ^1.0.3
+
+flutter_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path_android: "assets/icon/icon-android.png"
+  image_path_ios: "assets/icon/icon-ios.png"
+
+
+# For information on the generic Dart part of this file, see the
+# following page: https://www.dartlang.org/tools/pub/pubspec
+
+# The following section is specific to Flutter.
+flutter:
+
+  # The following line ensures that the Material Icons font is
+  # included with your application, so that you can use the icons in
+  # the material Icons class.
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/locale/locale_fr.json
+    - assets/locale/locale_en.json
+
+  fonts:
+    - family: Regular
+      fonts:
+        - asset: fonts/Oxygen-Regular.ttf
+    - family: Bold
+      fonts:
+        - asset: fonts/Oxygen-Bold.ttf
+    - family: Light
+      fonts:
+        - asset: fonts/Oxygen-Light.ttf
+    - family: Boxicons
+      fonts:
+        - asset: fonts/icomoon.ttf
+          weight: 400
+
