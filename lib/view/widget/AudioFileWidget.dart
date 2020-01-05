@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:play_music_along/model/AudioFile.dart';
+import 'package:play_music_along/view/screen/PlayAlongScreen.dart';
 
 class AudioFileWidget extends StatelessWidget {
   final AudioFile audioFile;
@@ -9,15 +10,23 @@ class AudioFileWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      leading: Text(
-        '${audioFile.type}',
-        style: TextStyle(fontSize: 12.0),
+    return GestureDetector(
+      onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => PlayAlongScreen(
+                audioFile: audioFile,
+              ))),
+      child: ListTile(
+        leading: Text(
+          '${audioFile.type}',
+          style: TextStyle(fontSize: 12.0),
+        ),
+        title: Text('${audioFile.path}'),
+        isThreeLine: true,
+        subtitle: Text(audioFile.tracks),
+        dense: true,
       ),
-      title: Text('${audioFile.path}'),
-      isThreeLine: true,
-      subtitle: Text(audioFile.tracks),
-      dense: true,
     );
   }
 }

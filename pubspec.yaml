@@ -28,6 +28,7 @@ dev_dependencies:
   ansicolor: ^1.0.2
   archive: ^2.0.10
   build_runner: ^1.0.0
+  dart_midi: ^1.0.1
   equatable: ^0.4.0
   http: ^0.12.0+2
   firebase_core: ^0.4.0+6
@@ -36,6 +37,7 @@ dev_dependencies:
   flutter_crashlytics: ^1.0.0
   flutter_localizations:
     sdk: flutter
+  flutter_midi: 1.0.0
   flutter_test:
     sdk: flutter
   fluttertoast: ^3.1.3
@@ -67,6 +69,7 @@ flutter:
     - assets/images/
     - assets/locale/locale_fr.json
     - assets/locale/locale_en.json
+    - assets/sf2/UprightPianoKW-20190703.sf2
 
   fonts:
     - family: Regular
