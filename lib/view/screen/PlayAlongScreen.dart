@@ -51,6 +51,7 @@ class Rest extends Note {
 class _PlayAlongScreenState extends State<PlayAlongScreen> {
   var _restsAndNotesByMidiNumber = {};
   var _midiNumberRange = { 'min': 0, 'max': 127 };
+  var _overallDurationInTicks = 0;
 
   @override
   void initState() {
@@ -125,11 +126,13 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
           }
         }
       }
+
+      _overallDurationInTicks = max(currentOffsetInTicks, _overallDurationInTicks);
     }
 
     _midiNumberRange = range;
 
-    Log.v(LogTag.MIDI, 'MIDI parsing done, range=$_midiNumberRange');
+    Log.v(LogTag.MIDI, 'MIDI parsing done, range=$_midiNumberRange, duration=$_overallDurationInTicks');
   }
 
   void play(String asset) async {
@@ -148,7 +151,7 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
           SliverHeader(title: 'Playing file ${widget.audioFile.path}'),
           SliverToBoxAdapter(
               child: Container(
-            height: 2500,
+            height: 1200,
             color: Colors.yellow[50],
             child: ListView.separated(
                 scrollDirection: Axis.horizontal,
@@ -167,6 +170,17 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
   }
 
   Widget getMidiNumberColumn(int midiNumber) {
-    return Container(color: Colors.red, height: 100, width: 20, child: Text(midiNumber.toString()));
+    return Column(
+      children: <Widget>[
+        getNote(midiNumber, Colors.red),
+        getNote(midiNumber, Colors.yellow),
+        getNote(midiNumber, Colors.blue),
+        getNote(midiNumber, Colors.green),
+      ],
+    );
+  }
+
+  Widget getNote(int midiNumber, Color color) {
+    return Container(color: color, height: 100, width: 20, child: Text(midiNumber.toString()));
   }
 }
