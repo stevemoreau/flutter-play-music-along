@@ -14,16 +14,12 @@ import 'package:play_music_along/utils/i18n/multiling_bloc.dart';
 import 'package:play_music_along/utils/i18n/multiling_global_translations.dart';
 import 'package:play_music_along/values/colors.dart';
 import 'package:play_music_along/view/screen/PlayAlongScreen.dart';
-import 'package:play_music_along/ws/ApiService.dart';
 import 'package:logging/logging.dart';
 
 Future main() async {
   bool isInDebugMode = !kReleaseMode;
 
   if (isInDebugMode) {
-    // FIXME smoreau: dev/preprod/prod flavors equivalent ?
-    ApiService.baseApiUrl = "https://reqres.in/api";
-
     Log().initLogger(Level.ALL);
 
     FlutterError.onError = (FlutterErrorDetails details) {
@@ -36,8 +32,6 @@ Future main() async {
 //    CatcherOptions debugOptions = CatcherOptions(DialogReportMode(), [ConsoleHandler()]);
 //    Catcher(MyApp(), debugConfig: debugOptions);
   } else {
-    ApiService.baseApiUrl = "https://production.server.com/api";
-
     Log().initLogger(Level.WARNING);
 
     FlutterError.onError = (FlutterErrorDetails details) {
