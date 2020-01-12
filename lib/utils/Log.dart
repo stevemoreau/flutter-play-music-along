@@ -22,6 +22,7 @@ class Log {
   static final Log _instance = Log._privateConstructor();
 
   Log._privateConstructor();
+  static final midiNumbersToLog = [ 52, 55 ];
 
   factory Log() {
     return _instance;
@@ -45,8 +46,10 @@ class Log {
     return 'MBZ_' + describeEnum(tag);
   }
 
-  static v(LogTag tag, String message) {
-    Log().log.finest('[${_getTag(tag)}]: $message');
+  static v(LogTag tag, String message, { int midiNumber }) {
+    if (midiNumber == null || midiNumbersToLog.contains(midiNumber)) {
+      Log().log.finest('[${_getTag(tag)}]: $message');
+    }
   }
 
   static d(LogTag tag, String message) {
