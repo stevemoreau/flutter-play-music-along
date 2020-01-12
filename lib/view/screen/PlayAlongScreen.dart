@@ -19,9 +19,7 @@ class PlayAlongScreen extends StatefulWidget {
   _PlayAlongScreenState createState() => _PlayAlongScreenState();
 }
 
-enum Instrument {
-  PIANO
-}
+enum Instrument { PIANO }
 
 class Measure {
   int ticksPerBeat = 0;
@@ -37,9 +35,9 @@ class Measure {
 
 class Note {
   int absoluteStartOffsetInTicks;
-  int durationInTicks;
+  double durationInTicks;
 
-  Note(this.absoluteStartOffsetInTicks);
+  Note(this.absoluteStartOffsetInTicks, {this.durationInTicks});
 }
 
 class Rest extends Note {
@@ -50,8 +48,9 @@ class Rest extends Note {
 
 class _PlayAlongScreenState extends State<PlayAlongScreen> {
   var _restsAndNotesByMidiNumber = {};
-  var _midiNumberRange = { 'min': 0, 'max': 127 };
+  var _midiNumberRange = {'min': 0, 'max': 127};
   var _overallDurationInTicks = 0;
+  double _shortestNoteDuration = 200;
 
   @override
   void initState() {
@@ -66,7 +65,8 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
     if ('Piano' == instrumentName) {
       instrument = Instrument.PIANO;
     } else {
-      Log.v(LogTag.MIDI, 'Instrument $instrumentName not supported at the moment');
+      Log.v(LogTag.MIDI,
+          'Instrument $instrumentName not supported at the moment');
     }
     return instrument;
   }
@@ -81,7 +81,9 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
     Measure currentMeasureInfo = Measure();
     currentMeasureInfo.ticksPerBeat = parsedMidi.header.ticksPerBeat;
 
-    var range = { 'min': 127, 'max': 0 };
+    var range = {'min': 127, 'max': 0};
+    List<int> notesDurations = [];
+
     for (var track in parsedMidi.tracks) {
       Instrument instrument;
       int currentOffsetInTicks = 0;
@@ -101,38 +103,50 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
           Log.v(LogTag.MIDI, 'Event InstrumentNameEvent: $instrument detected');
         } else if (event is NoteOnEvent) {
           int noteNumber = event.noteNumber;
+          //Log.v(LogTag.MIDI, 'Starting note $noteNumber at $currentOffsetInTicks');
 
           range['min'] = min(noteNumber, range['min']);
           range['max'] = max(noteNumber, range['max']);
 
           var notesAndRestsList = _restsAndNotesByMidiNumber[noteNumber];
+          if (notesAndRestsList == null && currentOffsetInTicks > 0) {
+            _restsAndNotesByMidiNumber[noteNumber] = <Note>[Rest(0)..durationInTicks = currentOffsetInTicks.toDouble()].toList();
+          }
+
           if (notesAndRestsList != null) {
             Note lastNoteOrRest = notesAndRestsList.last;
-            lastNoteOrRest.durationInTicks = event.deltaTime;
+            lastNoteOrRest.durationInTicks = event.deltaTime.toDouble();
             notesAndRestsList.add(Note(currentOffsetInTicks));
-
-          } else {
-            _restsAndNotesByMidiNumber[noteNumber] = <Note>[
-              Rest(0)
-            ].toList();
           }
         } else if (event is NoteOffEvent) {
           int noteNumber = event.noteNumber;
+          //Log.v(LogTag.MIDI, 'Stopping note $noteNumber (duration ${event.deltaTime})');
+
+          if (event.deltaTime > 0) {
+            notesDurations.add(event.deltaTime);
+          }
+
           var notesAndRestsList = _restsAndNotesByMidiNumber[noteNumber];
           if (notesAndRestsList != null) {
             Note lastNoteOrRest = notesAndRestsList.last;
-            lastNoteOrRest.durationInTicks = event.deltaTime;
+            lastNoteOrRest.durationInTicks = event.deltaTime.toDouble();
             notesAndRestsList.add(Rest(currentOffsetInTicks));
           }
         }
       }
 
-      _overallDurationInTicks = max(currentOffsetInTicks, _overallDurationInTicks);
+      _overallDurationInTicks =
+          max(currentOffsetInTicks, _overallDurationInTicks);
     }
 
+    _shortestNoteDuration = notesDurations.reduce((a, b) => a + b)/notesDurations.length;
     _midiNumberRange = range;
 
-    Log.v(LogTag.MIDI, 'MIDI parsing done, range=$_midiNumberRange, duration=$_overallDurationInTicks');
+    Log.v(
+        LogTag.MIDI,
+        'MIDI parsing done, range=$_midiNumberRange, '
+        'duration=$_overallDurationInTicks, '
+        '_shortestNoteDuration=$_shortestNoteDuration');
   }
 
   void play(String asset) async {
@@ -151,18 +165,18 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
           SliverHeader(title: 'Playing file ${widget.audioFile.path}'),
           SliverToBoxAdapter(
               child: Container(
-            height: 1200,
+            height: 100*_overallDurationInTicks/_shortestNoteDuration,
             color: Colors.yellow[50],
             child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: _midiNumberRange['max'] - _midiNumberRange['min'],
-                itemBuilder: (BuildContext context, int index) {
-                  return getMidiNumberColumn(_midiNumberRange['min'] + index);
-                },
-              separatorBuilder: (BuildContext context, int index) {
-                return Container(width: 5);
+              scrollDirection: Axis.horizontal,
+              itemCount: _midiNumberRange['max'] - _midiNumberRange['min'],
+              itemBuilder: (BuildContext context, int index) {
+                return getMidiNumberColumn(_midiNumberRange['min'] + index);
               },
-                ),
+              separatorBuilder: (BuildContext context, int index) {
+                return Container(width: 3);
+              },
+            ),
           ))
         ],
       ),
@@ -170,17 +184,32 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
   }
 
   Widget getMidiNumberColumn(int midiNumber) {
+    final List<Note> columnRestsAndNotes =
+        _restsAndNotesByMidiNumber[midiNumber];
+    List<Widget> columnNotes;
+
+    if (columnRestsAndNotes != null) {
+      columnNotes = columnRestsAndNotes.map<Widget>((noteOrRest) {
+        return getNote(midiNumber, noteOrRest);
+      }).toList();
+    } else {
+      columnNotes = <Widget>[
+        getNote(midiNumber, Rest(0)..durationInTicks = 100*_overallDurationInTicks/_shortestNoteDuration)
+      ];
+    }
+
     return Column(
-      children: <Widget>[
-        getNote(midiNumber, Colors.red),
-        getNote(midiNumber, Colors.yellow),
-        getNote(midiNumber, Colors.blue),
-        getNote(midiNumber, Colors.green),
-      ],
+      children: columnNotes,
     );
   }
 
-  Widget getNote(int midiNumber, Color color) {
-    return Container(color: color, height: 100, width: 20, child: Text(midiNumber.toString()));
+  Widget getNote(int midiNumber, Note noteOrRest) {
+    Color color = noteOrRest is Rest ? Colors.transparent : Colors.red;
+    double duration = noteOrRest.durationInTicks ?? 0;
+    return Container(
+        color: color,
+        height: 100*duration/_shortestNoteDuration,
+        width: 20,
+        child: Text(midiNumber.toString()));
   }
 }
