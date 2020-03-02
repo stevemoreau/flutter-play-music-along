@@ -231,12 +231,24 @@ packages:
   flutter_midi:
     dependency: "direct dev"
     description:
-      name: flutter_midi
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "1.0.0"
+      path: "../flutter_midi/flutter_midi"
+      relative: true
+    source: path
+    version: "1.0.1"
+  flutter_midi_platform_interface:
+    dependency: transitive
+    description:
+      path: "../flutter_midi/flutter_midi_platform_interface"
+      relative: true
+    source: path
+    version: "0.0.1"
   flutter_test:
     dependency: "direct dev"
+    description: flutter
+    source: sdk
+    version: "0.0.0"
+  flutter_web_plugins:
+    dependency: transitive
     description: flutter
     source: sdk
     version: "0.0.0"
@@ -400,7 +412,14 @@ packages:
       name: path_provider
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.5.1"
+    version: "1.6.0"
+  path_provider_macos:
+    dependency: transitive
+    description:
+      name: path_provider_macos
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.0.3"
   pedantic:
     dependency: transitive
     description:
@@ -429,6 +448,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.2.1"
+  plugin_platform_interface:
+    dependency: transitive
+    description:
+      name: plugin_platform_interface
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.0.1"
   pool:
     dependency: transitive
     description:
@@ -497,6 +523,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.5.5"
+  sprintf:
+    dependency: "direct dev"
+    description:
+      name: sprintf
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "4.0.2"
   stack_trace:
     dependency: transitive
     description:
@@ -546,6 +579,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.1.1+2"
+  tonic:
+    dependency: transitive
+    description:
+      name: tonic
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.2.3"
   typed_data:
     dependency: transitive
     description:
@@ -590,4 +630,4 @@ packages:
     version: "2.1.16"
 sdks:
   dart: ">=2.5.0 <3.0.0"
-  flutter: ">=1.10.0 <2.0.0"
+  flutter: ">=1.12.8 <2.0.0"
