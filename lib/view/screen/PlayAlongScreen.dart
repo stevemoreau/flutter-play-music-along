@@ -75,9 +75,11 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
 
     Log.v(LogTag.MIDI, 'SCROLLING');
 
-    _scrollController.animateTo(_scrollController.position.maxScrollExtent,
+    _scrollController.animateTo(maxExtent,
         duration: Duration(seconds: durationDouble.toInt()),
-        curve: Curves.linear);
+        curve: Curves.linear).then((value) {
+          // FIXME: loop or stop
+    });
   }
 
   _toggleScrolling() {
@@ -88,15 +90,14 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
     Log.v(LogTag.MIDI, '--------------- SCROLLING');
 
     //if (_scrollController.hasClients) {
-      if (scroll) {
-        _scroll();
-      } else {
-        _scrollController.animateTo(_scrollController.offset,
-            duration: Duration(seconds: 1), curve: Curves.linear);
-      }
+    if (scroll) {
+      _scroll();
+    } else {
+      _scrollController.animateTo(_scrollController.offset,
+          duration: Duration(seconds: 1), curve: Curves.linear);
+    }
     //}
   }
-
 
   @override
   void initState() {
@@ -147,11 +148,10 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
   }
 
   void playFile() {
-    Log.v(LogTag.MIDI,
-        'Scroll to 500');
-    _scrollController.jumpTo(0);
-    _scrollController.animateTo(5000,
-        duration: Duration(seconds: 10), curve: Curves.linear);
+    Log.v(LogTag.MIDI, 'Scroll to 500');
+    _scrollController.jumpTo(_scrollController.position.maxScrollExtent/12);
+    _scrollController.animateTo(0,
+        duration: Duration(seconds: 300), curve: Curves.linear);
 //  _toggleScrolling();
   }
 
@@ -203,8 +203,8 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
             if (currentOffsetInTicks > 0) {
               Log.v(LogTag.MIDI, 'Initial rest for note $noteNumber',
                   midiNumber: noteNumber);
-              notesAndRestsList.add(Rest(0)
-                ..durationInTicks = currentOffsetInTicks);
+              notesAndRestsList
+                  .add(Rest(0)..durationInTicks = currentOffsetInTicks);
             }
           }
 
@@ -255,8 +255,8 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
     Log.v(
         LogTag.MIDI,
         'MIDI parsing done, range=$_midiNumberRange, '
-            'duration=$_overallDurationInTicks, '
-            '_averageNoteDuration=$_averageNoteDuration');
+        'duration=$_overallDurationInTicks, '
+        '_averageNoteDuration=$_averageNoteDuration');
   }
 
   void play(String asset) async {
@@ -268,13 +268,13 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
 
   @override
   Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_){
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       Log.v(LogTag.MIDI, '--------------- SCROLLING');
       playFile();
     });
 
-    var overallExpectedHeight = 100 * _overallDurationInTicks /
-        _averageNoteDuration;
+    var overallExpectedHeight =
+        100 * _overallDurationInTicks / _averageNoteDuration;
     Log.v(LogTag.MIDI, 'OVERALL HEIGHT = $overallExpectedHeight');
     return Scaffold(
       resizeToAvoidBottomPadding: false,
@@ -284,23 +284,21 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
           SliverHeader(title: 'Playing file ${widget.audioFile.path}'),
           SliverToBoxAdapter(
               child: SingleChildScrollView(
-                child: Container(
-                  height: overallExpectedHeight,
-                  color: Colors.yellow[50],
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _midiNumberRange['max'] -
-                        _midiNumberRange['min'],
-                    itemBuilder: (BuildContext context, int index) {
-                      return getMidiNumberColumn(
-                          _midiNumberRange['min'] + index);
-                    },
-                    separatorBuilder: (BuildContext context, int index) {
-                      return Container(width: 3);
-                    },
-                  ),
-                ),
-              ))
+            child: Container(
+              height: overallExpectedHeight,
+              color: Colors.yellow[50],
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: _midiNumberRange['max'] - _midiNumberRange['min'],
+                itemBuilder: (BuildContext context, int index) {
+                  return getMidiNumberColumn(_midiNumberRange['min'] + index);
+                },
+                separatorBuilder: (BuildContext context, int index) {
+                  return Container(width: 3);
+                },
+              ),
+            ),
+          ))
         ],
       ),
     );
@@ -308,7 +306,7 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
 
   Widget getMidiNumberColumn(int midiNumber) {
     final List<Note> columnRestsAndNotes =
-    _restsAndNotesByMidiNumber[midiNumber];
+        _restsAndNotesByMidiNumber[midiNumber];
     List<Widget> columnNotes;
 
     if (columnRestsAndNotes != null) {
@@ -317,14 +315,16 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
       }).toList();
     } else {
       columnNotes = <Widget>[
-        getNote(midiNumber, Rest(0)
-          ..durationInTicks = 100 * _overallDurationInTicks /
-              _averageNoteDuration)
+        getNote(
+            midiNumber,
+            Rest(0)
+              ..durationInTicks =
+                  100 * _overallDurationInTicks / _averageNoteDuration)
       ];
     }
 
     return Column(
-      children: columnNotes,
+      children: columnNotes.reversed.toList(),
     );
   }
 
@@ -346,6 +346,11 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
         height: height > 0 ? height : 10,
         // FIXME smoreau: remove when bug located
         width: 20,
-        child: Text(midiNumber.toString()));
+        child: Align(
+            alignment: FractionalOffset.bottomCenter,
+            child: Text(
+              midiNumber.toString(),
+              textAlign: TextAlign.center,
+            )));
   }
 }
