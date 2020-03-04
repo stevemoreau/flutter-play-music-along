@@ -62,7 +62,7 @@ class _DummyState extends State<Dummy> {
     FlutterMidi.unmute(); // Optionally Unmute
     ByteData _byte = await rootBundle.load(soundBank);
     //FlutterMidi.prepare(sf2: _byte);
-    FlutterMidi.playMidiFile(path: '/data/user/0/com.example.play_music_along/app_flutter/midi/test.mid');
+    //FlutterMidi.playMidiFile(path: '/data/user/0/com.example.play_music_along/app_flutter/midi/test.mid');
   }
 
   void addNote(String prefix) {

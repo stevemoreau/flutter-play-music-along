@@ -64,6 +64,7 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
   double _overallDurationInTicks = 0;
   double _averageNoteDuration = 200;
   Measure _currentMeasureInfo = Measure();
+  double _tempoFactor = 0.2;
 
   ScrollController _scrollController = ScrollController();
   bool scroll = false;
@@ -78,6 +79,7 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
       importMidAssetFile().then((midiFileExample) {
         widget.audioFile.path = midiFileExample;
         loadMidi(File(widget.audioFile.path)).then((value) => setState(() {}));
+        FlutterMidi.loadMidiFile(path: widget.audioFile.path);
       });
     } else {
       loadMidi(File(widget.audioFile.path)).then((value) => setState(() {}));
@@ -102,7 +104,7 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
   _scroll() {
     double remainingExtend = _scrollController.offset;
     int scrollDuration =
-        (getTicks(viewDimension: remainingExtend) * _currentMeasureInfo.tickDurationInMicroSeconds)
+        (getTicks(viewDimension: remainingExtend) * _currentMeasureInfo.tickDurationInMicroSeconds / _tempoFactor)
             .round();
 
     Log.v(LogTag.MIDI,
@@ -133,7 +135,7 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
 
     final midiFile = widget.audioFile.path;
     Log.v(LogTag.MIDI, 'Playing MIDI file $midiFile');
-    return FlutterMidi.playMidiFile(path: midiFile);
+    return FlutterMidi.playCurrentMidiFile(tempoFactor: _tempoFactor);
   }
 
   _toggleScrolling() {
@@ -290,7 +292,7 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
     });
   }
 
-  void loadSoundBank(String soundBank) async {
+  loadSoundBank(String soundBank) async {
     FlutterMidi.unmute(); // Optionally Unmute
     ByteData _byte = await rootBundle.load(soundBank);
     //FlutterMidi.prepare(sf2: _byte);
@@ -340,12 +342,12 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
 
     if (columnRestsAndNotes != null) {
       columnNotes = columnRestsAndNotes.map<Widget>((noteOrRest) {
-        return getNote(midiNumber, noteOrRest);
+        return _getNote(midiNumber, noteOrRest);
       }).toList();
       //columnNotes.clear();
     } else {
       columnNotes = <Widget>[
-        getNote(
+        _getNote(
             midiNumber,
             Rest(0)
               ..durationInTicks =
@@ -398,7 +400,7 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
     return color;
   }
 
-  Widget getNote(int midiNumber, Note noteOrRest) {
+  Widget _getNote(int midiNumber, Note noteOrRest) {
     Color color =
         noteOrRest is Rest ? Colors.transparent : _getNoteColor(midiNumber);
     double duration = noteOrRest.durationInTicks ?? 100;
