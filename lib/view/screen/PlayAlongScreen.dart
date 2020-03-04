@@ -11,6 +11,7 @@ import 'package:play_music_along/utils/Log.dart';
 import 'package:play_music_along/view/widget/SliverHeader.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart';
+import "package:intl/intl.dart";
 
 class PlayAlongScreen extends StatefulWidget {
   final AudioFile audioFile;
@@ -30,9 +31,7 @@ class Measure {
   int timeSignatureDenominator = 4;
   int microSecondsPerBeat = 0;
 
-  int durationInMicroSeconds() {
-    return 0;
-  }
+  double get tickDurationInMicroSeconds => microSecondsPerBeat / ticksPerBeat;
 }
 
 // FIXME smoreau: add music atom
@@ -63,25 +62,50 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
   var _midiNumberRange = {'min': 0, 'max': 127};
   double _overallDurationInTicks = 0;
   double _averageNoteDuration = 200;
+  Measure _currentMeasureInfo = Measure();
 
   ScrollController _scrollController = ScrollController();
   bool scroll = false;
   int speedFactor = 50;
 
+  double getViewDimension({double durationInTicks}) =>
+      100 * durationInTicks / _averageNoteDuration;
+
+  double getTicks({double viewDimension}) =>
+      viewDimension * _averageNoteDuration / 100;
+
+  String getHumanReadableDuration({int durationInMicroSeconds}) {
+    final date = DateTime.fromMicrosecondsSinceEpoch(durationInMicroSeconds);
+    final humanReadableFormat = DateFormat("m''''s\"");
+    return '${durationInMicroSeconds}us (${humanReadableFormat.format(date)}.${date.millisecond}${date.microsecond})';
+  }
+
+  double get overallHeight =>
+      getViewDimension(durationInTicks: _overallDurationInTicks);
+
   _scroll() {
-    double maxExtent = _scrollController.position.maxScrollExtent;
-    double distanceDifference = maxExtent - _scrollController.offset;
-    double durationDouble = distanceDifference / speedFactor;
+    double remainingExtend = _scrollController.offset;
+    int scrollDuration =
+        (getTicks(viewDimension: remainingExtend) * _currentMeasureInfo.tickDurationInMicroSeconds)
+            .round();
 
-    Log.v(LogTag.MIDI, 'SCROLLING');
-
+    Log.v(LogTag.MIDI,
+        'Scrolling to origin extend=$remainingExtend in ${getHumanReadableDuration(durationInMicroSeconds: scrollDuration)}');
     _scrollController
-        .animateTo(maxExtent,
-            duration: Duration(seconds: durationDouble.toInt()),
+        .animateTo(0,
+            duration: Duration(microseconds: scrollDuration),
             curve: Curves.linear)
         .then((value) {
       // FIXME: loop or stop
     });
+  }
+
+  _goToStart() {
+    _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+  }
+
+  _goToEnd() {
+    _scrollController.jumpTo(0);
   }
 
   _toggleScrolling() {
@@ -150,11 +174,9 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
   }
 
   void playFile() {
-    Log.v(LogTag.MIDI, 'Scroll to 500');
-    _scrollController.jumpTo(_scrollController.position.maxScrollExtent / 12);
-    _scrollController.animateTo(0,
-        duration: Duration(seconds: 300), curve: Curves.linear);
-//  _toggleScrolling();
+    _goToStart();
+    _goToEnd()();
+    _scroll();
   }
 
   void loadMidi(File midiFile) {
@@ -164,8 +186,7 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
     var tracksCount = parsedMidi.tracks.length;
     Log.v(LogTag.MIDI, 'Processing $tracksCount tracks');
 
-    Measure currentMeasureInfo = Measure();
-    currentMeasureInfo.ticksPerBeat = parsedMidi.header.ticksPerBeat;
+    _currentMeasureInfo.ticksPerBeat = parsedMidi.header.ticksPerBeat;
 
     var range = {'min': 127, 'max': 0};
     List<double> notesDurations = [];
@@ -178,11 +199,11 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
         currentOffsetInTicks += event.deltaTime;
         if (event is SetTempoEvent) {
           Log.v(LogTag.MIDI, 'Event SetTempoEvent');
-          currentMeasureInfo.microSecondsPerBeat = event.microsecondsPerBeat;
+          _currentMeasureInfo.microSecondsPerBeat = event.microsecondsPerBeat;
         } else if (event is TimeSignatureEvent) {
           Log.v(LogTag.MIDI, 'Event TimeSignatureEvent');
-          currentMeasureInfo.timeSignatureNumerator = event.numerator;
-          currentMeasureInfo.timeSignatureDenominator = event.denominator;
+          _currentMeasureInfo.timeSignatureNumerator = event.numerator;
+          _currentMeasureInfo.timeSignatureDenominator = event.denominator;
         } else if (event is ProgramChangeMidiEvent) {
           Log.v(LogTag.MIDI, 'Event ProgramChangeMidiEvent');
         } else if (event is InstrumentNameEvent) {
@@ -243,11 +264,11 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
             }
             notesAndRestsList.add(Rest(currentOffsetInTicks));
           }
+
+          _overallDurationInTicks =
+              max(currentOffsetInTicks, _overallDurationInTicks);
         }
       }
-
-      _overallDurationInTicks =
-          max(currentOffsetInTicks, _overallDurationInTicks);
     }
 
     _averageNoteDuration =
@@ -275,9 +296,7 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
       playFile();
     });
 
-    var overallExpectedHeight =
-        100 * _overallDurationInTicks / _averageNoteDuration;
-    Log.v(LogTag.MIDI, 'OVERALL HEIGHT = $overallExpectedHeight');
+    Log.v(LogTag.MIDI, 'OVERALL HEIGHT = $overallHeight');
     return Scaffold(
       resizeToAvoidBottomPadding: false,
       body: CustomScrollView(
@@ -286,7 +305,8 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
           SliverHeader(title: 'Playing file ${widget.audioFile.path}'),
           SliverToBoxAdapter(
               child: Container(
-            height: overallExpectedHeight,
+                padding: EdgeInsets.only(top: MediaQuery.of(context).size.height),
+            height: overallHeight,
             color: Colors.yellow[50],
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
@@ -313,6 +333,7 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
       columnNotes = columnRestsAndNotes.map<Widget>((noteOrRest) {
         return getNote(midiNumber, noteOrRest);
       }).toList();
+      //columnNotes.clear();
     } else {
       columnNotes = <Widget>[
         getNote(
@@ -323,8 +344,12 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
       ];
     }
 
-    return Column(
-      children: columnNotes.reversed.toList(),
+    return SizedBox(
+      height: overallHeight,
+      width: 20,
+      child: Stack(
+        children: columnNotes,
+      ),
     );
   }
 
@@ -368,7 +393,7 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
     Color color =
         noteOrRest is Rest ? Colors.transparent : _getNoteColor(midiNumber);
     double duration = noteOrRest.durationInTicks ?? 100;
-    var height = 100 * duration / _averageNoteDuration;
+    var height = getViewDimension(durationInTicks: duration);
 
     if (midiNumber == 64) {
       totalHeight += height;
@@ -376,16 +401,20 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
 
 //    Log.v(LogTag.MIDI,
 //        'Setting height $midiNumber $duration $_averageNoteDuration -> $height, $totalHeight');
-    return Container(
-        color: color,
-        height: height > 0 ? height : 10,
-        // FIXME smoreau: remove when bug located
-        width: 20,
-        child: Align(
-            alignment: FractionalOffset.bottomCenter,
-            child: Text(
-              midiNumber.toString(),
-              textAlign: TextAlign.center,
-            )));
+    return Positioned(
+      bottom: getViewDimension(
+          durationInTicks: noteOrRest.absoluteStartOffsetInTicks),
+      child: Container(
+          color: color,
+          height: height > 0 ? height : 10,
+          // FIXME smoreau: remove when bug located
+          width: 20,
+          child: Align(
+              alignment: FractionalOffset.bottomCenter,
+              child: Text(
+                midiNumber.toString(),
+                textAlign: TextAlign.center,
+              ))),
+    );
   }
 }
