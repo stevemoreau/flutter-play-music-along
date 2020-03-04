@@ -75,10 +75,12 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
 
     Log.v(LogTag.MIDI, 'SCROLLING');
 
-    _scrollController.animateTo(maxExtent,
-        duration: Duration(seconds: durationDouble.toInt()),
-        curve: Curves.linear).then((value) {
-          // FIXME: loop or stop
+    _scrollController
+        .animateTo(maxExtent,
+            duration: Duration(seconds: durationDouble.toInt()),
+            curve: Curves.linear)
+        .then((value) {
+      // FIXME: loop or stop
     });
   }
 
@@ -149,7 +151,7 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
 
   void playFile() {
     Log.v(LogTag.MIDI, 'Scroll to 500');
-    _scrollController.jumpTo(_scrollController.position.maxScrollExtent/12);
+    _scrollController.jumpTo(_scrollController.position.maxScrollExtent / 12);
     _scrollController.animateTo(0,
         duration: Duration(seconds: 300), curve: Curves.linear);
 //  _toggleScrolling();
@@ -283,20 +285,18 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
         slivers: <Widget>[
           SliverHeader(title: 'Playing file ${widget.audioFile.path}'),
           SliverToBoxAdapter(
-              child: SingleChildScrollView(
-            child: Container(
-              height: overallExpectedHeight,
-              color: Colors.yellow[50],
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: _midiNumberRange['max'] - _midiNumberRange['min'],
-                itemBuilder: (BuildContext context, int index) {
-                  return getMidiNumberColumn(_midiNumberRange['min'] + index);
-                },
-                separatorBuilder: (BuildContext context, int index) {
-                  return Container(width: 3);
-                },
-              ),
+              child: Container(
+            height: overallExpectedHeight,
+            color: Colors.yellow[50],
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: _midiNumberRange['max'] - _midiNumberRange['min'],
+              itemBuilder: (BuildContext context, int index) {
+                return getMidiNumberColumn(_midiNumberRange['min'] + index);
+              },
+              separatorBuilder: (BuildContext context, int index) {
+                return Container(width: 3);
+              },
             ),
           ))
         ],
@@ -330,8 +330,43 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
 
   static double totalHeight = 0;
 
+  Color _getNoteColor(int midiNumber) {
+    Color color = Colors.transparent;
+    switch (midiNumber % 12) {
+      case 0:
+      case 1:
+        color = Colors.red;
+        break;
+      case 2:
+      case 3:
+        color = Colors.yellow;
+        break;
+      case 4:
+        color = Colors.deepPurple;
+        break;
+      case 5:
+      case 6:
+        color = Colors.blueAccent;
+        break;
+      case 7:
+      case 8:
+        color = Colors.teal;
+        break;
+      case 9:
+      case 10:
+        color = Colors.green;
+        break;
+      case 11:
+        color = Colors.orange;
+        break;
+    }
+
+    return color;
+  }
+
   Widget getNote(int midiNumber, Note noteOrRest) {
-    Color color = noteOrRest is Rest ? Colors.transparent : Colors.red;
+    Color color =
+        noteOrRest is Rest ? Colors.transparent : _getNoteColor(midiNumber);
     double duration = noteOrRest.durationInTicks ?? 100;
     var height = 100 * duration / _averageNoteDuration;
 
