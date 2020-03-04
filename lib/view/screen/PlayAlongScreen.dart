@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:dart_midi/dart_midi.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -68,6 +69,21 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
   bool scroll = false;
   int speedFactor = 50;
 
+  @override
+  void initState() {
+    super.initState();
+    loadSoundBank('assets/sf2/UprightPianoKW-20190703.sf2');
+
+    if (widget.audioFile.path == null) {
+      importMidAssetFile().then((midiFileExample) {
+        widget.audioFile.path = midiFileExample;
+        loadMidi(File(widget.audioFile.path)).then((value) => setState(() {}));
+      });
+    } else {
+      loadMidi(File(widget.audioFile.path)).then((value) => setState(() {}));
+    }
+  }
+
   double getViewDimension({double durationInTicks}) =>
       100 * durationInTicks / _averageNoteDuration;
 
@@ -101,11 +117,23 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
   }
 
   _goToStart() {
-    _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+    var maxExtend = _scrollController.position.maxScrollExtent;
+    Log.v(LogTag.MIDI, 'Scrolling to song start (full bottom, ie position = $maxExtend');
+    _scrollController.jumpTo(maxExtend);
   }
 
   _goToEnd() {
     _scrollController.jumpTo(0);
+  }
+
+  Future play() {
+    Log.v(LogTag.MIDI, 'Start playing');
+    _goToStart();
+    _scroll();
+
+    final midiFile = widget.audioFile.path;
+    Log.v(LogTag.MIDI, 'Playing MIDI file $midiFile');
+    return FlutterMidi.playMidiFile(path: midiFile);
   }
 
   _toggleScrolling() {
@@ -125,22 +153,6 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
     //}
   }
 
-  @override
-  void initState() {
-    play('assets/sf2/UprightPianoKW-20190703.sf2');
-
-    String file = widget.audioFile.path;
-    if (file == null) {
-      importMidAssetFile().then((value) {
-        file = value;
-        loadMidi(File(file));
-      });
-    } else {
-      loadMidi(File(file));
-    }
-
-    super.initState();
-  }
 
   Instrument _getInstrument(InstrumentNameEvent event) {
     Instrument instrument;
@@ -173,130 +185,127 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
         buffer.asUint8List(data.offsetInBytes, data.lengthInBytes));
   }
 
-  void playFile() {
-    _goToStart();
-    _goToEnd()();
-    _scroll();
-  }
+  Future loadMidi(File midiFile) {
+    return Future.sync(() {
+      Log.v(LogTag.MIDI, 'Parsing MIDI file ${midiFile.path}');
+      var parser = MidiParser();
+      MidiFile parsedMidi = parser.parseMidiFromFile(midiFile);
+      var tracksCount = parsedMidi.tracks.length;
+      Log.v(LogTag.MIDI, 'Processing $tracksCount tracks');
 
-  void loadMidi(File midiFile) {
-    Log.v(LogTag.MIDI, 'Parsing MIDI file ${midiFile.path}');
-    var parser = MidiParser();
-    MidiFile parsedMidi = parser.parseMidiFromFile(midiFile);
-    var tracksCount = parsedMidi.tracks.length;
-    Log.v(LogTag.MIDI, 'Processing $tracksCount tracks');
+      _currentMeasureInfo.ticksPerBeat = parsedMidi.header.ticksPerBeat;
 
-    _currentMeasureInfo.ticksPerBeat = parsedMidi.header.ticksPerBeat;
+      var range = {'min': 127, 'max': 0};
+      List<double> notesDurations = [];
 
-    var range = {'min': 127, 'max': 0};
-    List<double> notesDurations = [];
+      // FIXME smoreau: time slots merging, see mid=64 in 2 tracks
+      for (var track in parsedMidi.tracks) {
+        Instrument instrument;
+        double currentOffsetInTicks = 0;
+        for (var event in track) {
+          currentOffsetInTicks += event.deltaTime;
+          if (event is SetTempoEvent) {
+            Log.v(LogTag.MIDI, 'Event SetTempoEvent');
+            _currentMeasureInfo.microSecondsPerBeat = event.microsecondsPerBeat;
+          } else if (event is TimeSignatureEvent) {
+            Log.v(LogTag.MIDI, 'Event TimeSignatureEvent');
+            _currentMeasureInfo.timeSignatureNumerator = event.numerator;
+            _currentMeasureInfo.timeSignatureDenominator = event.denominator;
+          } else if (event is ProgramChangeMidiEvent) {
+            Log.v(LogTag.MIDI, 'Event ProgramChangeMidiEvent');
+          } else if (event is InstrumentNameEvent) {
+            instrument = _getInstrument(event);
+            Log.v(LogTag.MIDI, 'Event InstrumentNameEvent: $instrument detected');
+          } else if (event is NoteOnEvent) {
+            int noteNumber = event.noteNumber;
 
-    // FIXME smoreau: time slots merging, see mid=64 in 2 tracks
-    for (var track in parsedMidi.tracks) {
-      Instrument instrument;
-      double currentOffsetInTicks = 0;
-      for (var event in track) {
-        currentOffsetInTicks += event.deltaTime;
-        if (event is SetTempoEvent) {
-          Log.v(LogTag.MIDI, 'Event SetTempoEvent');
-          _currentMeasureInfo.microSecondsPerBeat = event.microsecondsPerBeat;
-        } else if (event is TimeSignatureEvent) {
-          Log.v(LogTag.MIDI, 'Event TimeSignatureEvent');
-          _currentMeasureInfo.timeSignatureNumerator = event.numerator;
-          _currentMeasureInfo.timeSignatureDenominator = event.denominator;
-        } else if (event is ProgramChangeMidiEvent) {
-          Log.v(LogTag.MIDI, 'Event ProgramChangeMidiEvent');
-        } else if (event is InstrumentNameEvent) {
-          instrument = _getInstrument(event);
-          Log.v(LogTag.MIDI, 'Event InstrumentNameEvent: $instrument detected');
-        } else if (event is NoteOnEvent) {
-          int noteNumber = event.noteNumber;
-
-          Log.v(
-              LogTag.MIDI, 'Starting note $noteNumber at $currentOffsetInTicks',
-              midiNumber: noteNumber);
-
-          range['min'] = min(noteNumber, range['min']);
-          range['max'] = max(noteNumber, range['max']);
-
-          var notesAndRestsList = _restsAndNotesByMidiNumber[noteNumber];
-          if (notesAndRestsList == null) {
-            notesAndRestsList = <Note>[].toList();
-            _restsAndNotesByMidiNumber[noteNumber] = notesAndRestsList;
-            if (currentOffsetInTicks > 0) {
-              Log.v(LogTag.MIDI, 'Initial rest for note $noteNumber',
-                  midiNumber: noteNumber);
-              notesAndRestsList
-                  .add(Rest(0)..durationInTicks = currentOffsetInTicks);
-            }
-          }
-
-          if (notesAndRestsList != null) {
-            if (notesAndRestsList.length > 0) {
-              Note lastNoteOrRest = notesAndRestsList.last;
-              lastNoteOrRest.durationInTicks = currentOffsetInTicks -
-                  lastNoteOrRest.absoluteStartOffsetInTicks;
-              Log.v(LogTag.MIDI,
-                  'Setting duration of previous rest for note $noteNumber $lastNoteOrRest',
-                  midiNumber: noteNumber);
-            }
-
-            notesAndRestsList.add(Note(currentOffsetInTicks));
-          }
-        } else if (event is NoteOffEvent) {
-          int noteNumber = event.noteNumber;
-          Log.v(
-              LogTag.MIDI, 'Stopping note $noteNumber at $currentOffsetInTicks',
-              midiNumber: noteNumber);
-
-          var notesAndRestsList = _restsAndNotesByMidiNumber[noteNumber];
-          if (notesAndRestsList != null) {
-            Note lastNoteOrRest = notesAndRestsList.last;
-            var noteDuration = currentOffsetInTicks -
-                lastNoteOrRest.absoluteStartOffsetInTicks;
-            lastNoteOrRest.durationInTicks = noteDuration;
-            Log.v(LogTag.MIDI,
-                'Setting duration of previous note for note $noteNumber $lastNoteOrRest',
+            Log.v(
+                LogTag.MIDI, 'Starting note $noteNumber at $currentOffsetInTicks',
                 midiNumber: noteNumber);
 
-            if (noteDuration > 0) {
-              notesDurations.add(noteDuration);
-            }
-            notesAndRestsList.add(Rest(currentOffsetInTicks));
-          }
+            range['min'] = min(noteNumber, range['min']);
+            range['max'] = max(noteNumber, range['max']);
 
-          _overallDurationInTicks =
-              max(currentOffsetInTicks, _overallDurationInTicks);
+            var notesAndRestsList = _restsAndNotesByMidiNumber[noteNumber];
+            if (notesAndRestsList == null) {
+              notesAndRestsList = <Note>[].toList();
+              _restsAndNotesByMidiNumber[noteNumber] = notesAndRestsList;
+              if (currentOffsetInTicks > 0) {
+                Log.v(LogTag.MIDI, 'Initial rest for note $noteNumber',
+                    midiNumber: noteNumber);
+                notesAndRestsList
+                    .add(Rest(0)..durationInTicks = currentOffsetInTicks);
+              }
+            }
+
+            if (notesAndRestsList != null) {
+              if (notesAndRestsList.length > 0) {
+                Note lastNoteOrRest = notesAndRestsList.last;
+                lastNoteOrRest.durationInTicks = currentOffsetInTicks -
+                    lastNoteOrRest.absoluteStartOffsetInTicks;
+                Log.v(LogTag.MIDI,
+                    'Setting duration of previous rest for note $noteNumber $lastNoteOrRest',
+                    midiNumber: noteNumber);
+              }
+
+              notesAndRestsList.add(Note(currentOffsetInTicks));
+            }
+          } else if (event is NoteOffEvent) {
+            int noteNumber = event.noteNumber;
+            Log.v(
+                LogTag.MIDI, 'Stopping note $noteNumber at $currentOffsetInTicks',
+                midiNumber: noteNumber);
+
+            var notesAndRestsList = _restsAndNotesByMidiNumber[noteNumber];
+            if (notesAndRestsList != null) {
+              Note lastNoteOrRest = notesAndRestsList.last;
+              var noteDuration = currentOffsetInTicks -
+                  lastNoteOrRest.absoluteStartOffsetInTicks;
+              lastNoteOrRest.durationInTicks = noteDuration;
+              Log.v(LogTag.MIDI,
+                  'Setting duration of previous note for note $noteNumber $lastNoteOrRest',
+                  midiNumber: noteNumber);
+
+              if (noteDuration > 0) {
+                notesDurations.add(noteDuration);
+              }
+              notesAndRestsList.add(Rest(currentOffsetInTicks));
+            }
+
+            _overallDurationInTicks =
+                max(currentOffsetInTicks, _overallDurationInTicks);
+          }
         }
       }
-    }
 
-    _averageNoteDuration =
-        notesDurations.reduce((a, b) => a + b) / notesDurations.length;
-    _midiNumberRange = range;
+      _averageNoteDuration =
+          notesDurations.reduce((a, b) => a + b) / notesDurations.length;
+      _midiNumberRange = range;
 
-    Log.v(
-        LogTag.MIDI,
-        'MIDI parsing done, range=$_midiNumberRange, '
-        'duration=$_overallDurationInTicks, '
-        '_averageNoteDuration=$_averageNoteDuration');
+      Log.v(
+          LogTag.MIDI,
+          'MIDI parsing done, range=$_midiNumberRange, '
+              'duration=$_overallDurationInTicks, '
+              '_averageNoteDuration=$_averageNoteDuration');
+    });
   }
 
-  void play(String asset) async {
+  void loadSoundBank(String soundBank) async {
     FlutterMidi.unmute(); // Optionally Unmute
-    ByteData _byte = await rootBundle.load(asset);
-    FlutterMidi.prepare(sf2: _byte);
-    //FlutterMidi.playMidiNote(midi: 60);
+    ByteData _byte = await rootBundle.load(soundBank);
+    //FlutterMidi.prepare(sf2: _byte);
   }
 
   @override
   Widget build(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Log.v(LogTag.MIDI, '--------------- SCROLLING');
-      playFile();
+      if (overallHeight > 0) {
+        Log.v(LogTag.MIDI, 'Build done, playing file');
+        play();
+      }
     });
 
-    Log.v(LogTag.MIDI, 'OVERALL HEIGHT = $overallHeight');
+    Log.v(LogTag.MIDI, 'Entering build(), OVERALL HEIGHT = $overallHeight');
     return Scaffold(
       resizeToAvoidBottomPadding: false,
       body: CustomScrollView(

@@ -20,6 +20,8 @@ import 'package:logging/logging.dart';
 Future main() async {
   bool isInDebugMode = !kReleaseMode;
 
+  WidgetsFlutterBinding.ensureInitialized();
+
   if (isInDebugMode) {
     Log().initLogger(Level.ALL);
 
