@@ -373,40 +373,18 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
     );
   }
 
-  static double totalHeight = 0;
-
   Color _getNoteColor(int midiNumber) {
-    Color color = Colors.transparent;
-    switch (midiNumber % 12) {
-      case 0:
-      case 1:
-        color = Colors.red;
-        break;
-      case 2:
-      case 3:
-        color = Colors.yellow;
-        break;
-      case 4:
-        color = Colors.deepPurple;
-        break;
-      case 5:
-      case 6:
-        color = Colors.blueAccent;
-        break;
-      case 7:
-      case 8:
-        color = Colors.teal;
-        break;
-      case 9:
-      case 10:
-        color = Colors.green;
-        break;
-      case 11:
-        color = Colors.orange;
-        break;
-    }
-
-    return color;
+    final Map colors = {
+      'C': Colors.red,
+      'D': Colors.yellow,
+      'E': Colors.deepPurple,
+      'F': Colors.blueAccent,
+      'G': Colors.teal,
+      'A': Colors.green,
+      'B': Colors.orange,
+    };
+    String noteNameWithoutAccidental = Pitch.fromMidiNumber(midiNumber).letterName[0];
+    return colors[noteNameWithoutAccidental];
   }
 
   double _getNoteWidth(Pitch pitch) {
@@ -427,20 +405,13 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
     final pitch = Pitch.fromMidiNumber(midiNumber);
     BorderRadiusGeometry borderRadius = const BorderRadius.all(Radius.circular(2.0));
 
-    if (midiNumber == 64) {
-      totalHeight += height;
-    }
-
-//    Log.v(LogTag.MIDI,
-//        'Setting height $midiNumber $duration $_averageNoteDuration -> $height, $totalHeight');
     return Positioned(
       bottom: getViewDimension(
           durationInTicks: noteOrRest.absoluteStartOffsetInTicks),
       child: ClipRRect(
         borderRadius: borderRadius,
         child: Container(
-            // FIXME smoreau: remove when bug located
-            height: height > 0 ? height : 10,
+            height: height,
             padding: EdgeInsets.only(bottom: 5),
             color: color,
             width: _getNoteWidth(pitch),
