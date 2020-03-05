@@ -1,22 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:play_music_along/utils/Midi.dart';
-import 'package:tonic/tonic.dart';
-
-Color getNoteColor(int midiNumber) {
-  final Map colors = {
-    'C': Colors.red,
-    'D': Colors.yellow,
-    'E': Colors.deepPurple,
-    'F': Colors.blueAccent,
-    'G': Colors.pinkAccent,
-    'A': Colors.green,
-    'B': Colors.orange,
-  };
-  String noteNameWithoutAccidental =
-      Pitch.fromMidiNumber(midiNumber).letterName[0];
-  return colors[noteNameWithoutAccidental];
-}
 
 class TearingNote extends StatelessWidget {
   final double width;
@@ -48,7 +32,7 @@ class TearingNote extends StatelessWidget {
         child: Container(
             height: height,
             padding: EdgeInsets.only(bottom: 5),
-            color: note is Rest ? Colors.transparent : getNoteColor(midiNumber),
+            color: note is Rest ? Colors.transparent : MidiPitch(midiNumber).pitchColor,
             width: width,
             child: Align(
                 alignment: FractionalOffset.bottomCenter,

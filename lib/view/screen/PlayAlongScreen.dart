@@ -159,14 +159,11 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
             padding: EdgeInsets.only(top: MediaQuery.of(context).size.height),
             height: _midiFileInfo.overallHeight,
             color: Colors.yellow[50],
-            child: ListView.separated(
+            child: ListView.builder(
               scrollDirection: Axis.horizontal,
               itemCount: _midiFileInfo.midiNumberRange['max'] - _midiFileInfo.midiNumberRange['min'],
               itemBuilder: (BuildContext context, int index) {
                 return getMidiNumberColumn(_midiFileInfo.midiNumberRange['min'] + index);
-              },
-              separatorBuilder: (BuildContext context, int index) {
-                return Container(width: 3);
               },
             ),
           ))
@@ -210,10 +207,14 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
 
   double _getNoteWidth(Pitch pitch) {
     double width = 24;
-    if (pitch.accidentalSemitones > 0) {
-      width = 10;
-    } else if (pitch.midiNumber % 12 == 2 || pitch.midiNumber % 12 == 7 || pitch.midiNumber % 12 == 9) {
-      width = 15;
+    bool isBlackKey = pitch.accidentalSemitones > 0;
+    bool isWhiteKeyBetweenTwoBlackKeys = ['D', 'G', 'A'].contains(MidiPitch(pitch.midiNumber).pitchBaseName);
+    if (isBlackKey) {
+      width = width*1/4;
+    } else if (isWhiteKeyBetweenTwoBlackKeys) {
+      width = width*3/4;
+    } else {
+      width = width*(3/4 + 1/8);
     }
     return width;
   }

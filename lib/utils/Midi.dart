@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:dart_midi/dart_midi.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_midi/flutter_midi.dart';
 import 'package:tonic/tonic.dart';
@@ -38,7 +39,7 @@ class Note {
 }
 
 class Rest extends Note {
-  Rest(double absoluteStartOffsetInTicks, { int midiNumber })
+  Rest(double absoluteStartOffsetInTicks, {int midiNumber})
       : super(absoluteStartOffsetInTicks, midiNumber: midiNumber) {
     type = 'REST';
   }
@@ -199,5 +200,30 @@ class Midi {
     FlutterMidi.unmute(); // Optionally Unmute
     ByteData _byte = await rootBundle.load(soundBank);
     //FlutterMidi.prepare(sf2: _byte);
+  }
+}
+
+class MidiPitch {
+  final int midiNumber;
+  Pitch pitch;
+
+  MidiPitch(this.midiNumber) {
+    this.pitch = Pitch.fromMidiNumber(midiNumber);
+  }
+
+  /// Note name without accidental (among 7 main notes A..G)
+  String get pitchBaseName => pitch.letterName[0];
+
+  Color get pitchColor {
+    final Map colors = {
+      'C': Colors.red,
+      'D': Colors.yellow,
+      'E': Colors.deepPurple,
+      'F': Colors.blueAccent,
+      'G': Colors.pinkAccent,
+      'A': Colors.green,
+      'B': Colors.orange,
+    };
+    return colors[pitchBaseName];
   }
 }
