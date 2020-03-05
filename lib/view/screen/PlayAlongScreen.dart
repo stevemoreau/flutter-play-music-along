@@ -143,7 +143,7 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
       if (_midiFileInfo.overallHeight > 0) {
         Log.v(LogTag.MIDI, 'Build done, playing file');
         _goToStart();
-        // play();
+        play();
       }
     });
 

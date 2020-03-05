@@ -1,14 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:play_music_along/utils/Log.dart';
 import 'package:tonic/tonic.dart';
+import 'package:flutter_midi/flutter_midi.dart';
 
-class PianoVisualizer extends StatelessWidget {
+class PianoVisualizer extends StatefulWidget {
   final double keyWidth;
+
+  const PianoVisualizer({Key key, @required this.keyWidth}) : super(key: key);
+
+  @override
+  PianoVisualizerState createState() => PianoVisualizerState();
+}
+
+class PianoVisualizerState extends State<PianoVisualizer> {
   final BorderRadiusGeometry _borderRadius = const BorderRadius.only(
       bottomLeft: Radius.circular(3.0), bottomRight: Radius.circular(3.0));
   final bool _showLabels = true;
+  bool _active = false;
 
-  const PianoVisualizer({Key key, @required this.keyWidth}) : super(key: key);
+  @override
+  void initState() {
+    super.initState();
+
+    FlutterMidi.setMethodCallbacks(onNoteEvent: (String event) {
+      Log.v(LogTag.MIDI, '------- Event received $event');
+      bool active = false;
+      switch (event) {
+        case 'NOTE_ON':
+          active = true;
+          break;
+        case 'NOTE_OFF':
+          active = false;
+          break;
+      }
+      setState(() {
+        _active = active;
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,14 +68,14 @@ class PianoVisualizer extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
-                      Container(width: keyWidth * .5),
+                      Container(width: widget.keyWidth * .5),
                       _buildKey('C♯', octave),
                       _buildKey('D♯', octave),
-                      Container(width: keyWidth),
+                      Container(width: widget.keyWidth),
                       _buildKey('F♯', octave),
                       _buildKey('G♯', octave),
                       _buildKey('A♯', octave),
-                      Container(width: keyWidth * .5),
+                      Container(width: widget.keyWidth * .5),
                     ])),
           ]),
         );
@@ -57,6 +87,9 @@ class PianoVisualizer extends StatelessWidget {
     var pitch = Pitch.parse(noteName + octave.toString());
     final pitchName = pitch.toString();
     final accidental = pitch.accidentalSemitones > 0;
+
+    final color = noteName == 'C' && _active ? Colors.red : Colors.white;
+
     final pianoKey = Stack(
       children: <Widget>[
         Semantics(
@@ -64,7 +97,7 @@ class PianoVisualizer extends StatelessWidget {
             hint: pitchName,
             child: Material(
                 borderRadius: _borderRadius,
-                color: accidental ? Colors.black : Colors.white,
+                color: accidental ? Colors.black : color,
                 child: InkWell(
                   borderRadius: _borderRadius,
                   highlightColor: Colors.grey,
@@ -84,9 +117,9 @@ class PianoVisualizer extends StatelessWidget {
     );
     if (accidental) {
       return Container(
-          width: keyWidth,
+          width: widget.keyWidth,
           margin: EdgeInsets.symmetric(horizontal: 2.0),
-          padding: EdgeInsets.symmetric(horizontal: keyWidth * .1),
+          padding: EdgeInsets.symmetric(horizontal: widget.keyWidth * .1),
           child: Material(
               elevation: 4.0,
               borderRadius: _borderRadius,
@@ -94,7 +127,7 @@ class PianoVisualizer extends StatelessWidget {
               child: pianoKey));
     }
     return Container(
-        width: keyWidth,
+        width: widget.keyWidth,
         child: pianoKey,
         margin: EdgeInsets.symmetric(horizontal: 2.0),
     );
