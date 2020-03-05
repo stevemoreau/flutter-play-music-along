@@ -9,10 +9,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_midi/flutter_midi.dart';
 import 'package:play_music_along/model/AudioFile.dart';
 import 'package:play_music_along/utils/Log.dart';
+import 'package:play_music_along/view/widget/PianoVisualizer.dart';
 import 'package:play_music_along/view/widget/SliverHeader.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart';
 import "package:intl/intl.dart";
+import 'package:tonic/tonic.dart';
 
 class PlayAlongScreen extends StatefulWidget {
   final AudioFile audioFile;
@@ -103,9 +105,10 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
 
   _scroll() {
     double remainingExtend = _scrollController.offset;
-    int scrollDuration =
-        (getTicks(viewDimension: remainingExtend) * _currentMeasureInfo.tickDurationInMicroSeconds / _tempoFactor)
-            .round();
+    int scrollDuration = (getTicks(viewDimension: remainingExtend) *
+            _currentMeasureInfo.tickDurationInMicroSeconds /
+            _tempoFactor)
+        .round();
 
     Log.v(LogTag.MIDI,
         'Scrolling to origin extend=$remainingExtend in ${getHumanReadableDuration(durationInMicroSeconds: scrollDuration)}');
@@ -120,7 +123,8 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
 
   _goToStart() {
     var maxExtend = _scrollController.position.maxScrollExtent;
-    Log.v(LogTag.MIDI, 'Scrolling to song start (full bottom, ie position = $maxExtend');
+    Log.v(LogTag.MIDI,
+        'Scrolling to song start (full bottom, ie position = $maxExtend');
     _scrollController.jumpTo(maxExtend);
   }
 
@@ -154,7 +158,6 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
     }
     //}
   }
-
 
   Instrument _getInstrument(InstrumentNameEvent event) {
     Instrument instrument;
@@ -217,12 +220,13 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
             Log.v(LogTag.MIDI, 'Event ProgramChangeMidiEvent');
           } else if (event is InstrumentNameEvent) {
             instrument = _getInstrument(event);
-            Log.v(LogTag.MIDI, 'Event InstrumentNameEvent: $instrument detected');
+            Log.v(
+                LogTag.MIDI, 'Event InstrumentNameEvent: $instrument detected');
           } else if (event is NoteOnEvent) {
             int noteNumber = event.noteNumber;
 
-            Log.v(
-                LogTag.MIDI, 'Starting note $noteNumber at $currentOffsetInTicks',
+            Log.v(LogTag.MIDI,
+                'Starting note $noteNumber at $currentOffsetInTicks',
                 midiNumber: noteNumber);
 
             range['min'] = min(noteNumber, range['min']);
@@ -254,8 +258,8 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
             }
           } else if (event is NoteOffEvent) {
             int noteNumber = event.noteNumber;
-            Log.v(
-                LogTag.MIDI, 'Stopping note $noteNumber at $currentOffsetInTicks',
+            Log.v(LogTag.MIDI,
+                'Stopping note $noteNumber at $currentOffsetInTicks',
                 midiNumber: noteNumber);
 
             var notesAndRestsList = _restsAndNotesByMidiNumber[noteNumber];
@@ -287,8 +291,8 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
       Log.v(
           LogTag.MIDI,
           'MIDI parsing done, range=$_midiNumberRange, '
-              'duration=$_overallDurationInTicks, '
-              '_averageNoteDuration=$_averageNoteDuration');
+          'duration=$_overallDurationInTicks, '
+          '_averageNoteDuration=$_averageNoteDuration');
     });
   }
 
@@ -303,7 +307,7 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (overallHeight > 0) {
         Log.v(LogTag.MIDI, 'Build done, playing file');
-        play();
+        //play();
       }
     });
 
@@ -316,7 +320,7 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
           SliverHeader(title: 'Playing file ${widget.audioFile.path}'),
           SliverToBoxAdapter(
               child: Container(
-                padding: EdgeInsets.only(top: MediaQuery.of(context).size.height),
+            padding: EdgeInsets.only(top: MediaQuery.of(context).size.height),
             height: overallHeight,
             color: Colors.yellow[50],
             child: ListView.separated(
@@ -332,6 +336,10 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
           ))
         ],
       ),
+      bottomNavigationBar: Container(
+        height: 120,
+        child: PianoVisualizer(keyWidth: 20),
+      ),
     );
   }
 
@@ -342,8 +350,8 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
 
     if (columnRestsAndNotes != null) {
       columnNotes = columnRestsAndNotes.map<Widget>((noteOrRest) {
-        return _getNote(midiNumber, noteOrRest);
-      }).toList();
+        return noteOrRest is Rest ? null : _getNote(midiNumber, noteOrRest);
+      }).where((element) => element != null).toList();
       //columnNotes.clear();
     } else {
       columnNotes = <Widget>[
@@ -354,10 +362,11 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
                   100 * _overallDurationInTicks / _averageNoteDuration)
       ];
     }
+    final pitch = Pitch.fromMidiNumber(midiNumber);
 
     return SizedBox(
       height: overallHeight,
-      width: 20,
+      width: _getNoteWidth(pitch),
       child: Stack(
         children: columnNotes,
       ),
@@ -400,11 +409,23 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
     return color;
   }
 
+  double _getNoteWidth(Pitch pitch) {
+    double width = 24;
+    if (pitch.accidentalSemitones > 0) {
+      width = 10;
+    } else if (pitch.midiNumber % 12 == 2 || pitch.midiNumber % 12 == 7 || pitch.midiNumber % 12 == 9) {
+      width = 15;
+    }
+    return width;
+  }
+
   Widget _getNote(int midiNumber, Note noteOrRest) {
     Color color =
         noteOrRest is Rest ? Colors.transparent : _getNoteColor(midiNumber);
     double duration = noteOrRest.durationInTicks ?? 100;
     var height = getViewDimension(durationInTicks: duration);
+    final pitch = Pitch.fromMidiNumber(midiNumber);
+    BorderRadiusGeometry borderRadius = const BorderRadius.all(Radius.circular(2.0));
 
     if (midiNumber == 64) {
       totalHeight += height;
@@ -415,17 +436,22 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
     return Positioned(
       bottom: getViewDimension(
           durationInTicks: noteOrRest.absoluteStartOffsetInTicks),
-      child: Container(
-          color: color,
-          height: height > 0 ? height : 10,
-          // FIXME smoreau: remove when bug located
-          width: 20,
-          child: Align(
-              alignment: FractionalOffset.bottomCenter,
-              child: Text(
-                midiNumber.toString(),
-                textAlign: TextAlign.center,
-              ))),
+      child: ClipRRect(
+        borderRadius: borderRadius,
+        child: Container(
+            // FIXME smoreau: remove when bug located
+            height: height > 0 ? height : 10,
+            padding: EdgeInsets.only(bottom: 5),
+            color: color,
+            width: _getNoteWidth(pitch),
+            child: Align(
+                alignment: FractionalOffset.bottomCenter,
+                child: Text(
+                  pitch.toString(),
+                  style: TextStyle(fontSize: 8, color: Colors.white),
+                  textAlign: TextAlign.center,
+                ))),
+      ),
     );
   }
 }

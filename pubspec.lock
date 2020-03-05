@@ -580,7 +580,7 @@ packages:
     source: hosted
     version: "0.1.1+2"
   tonic:
-    dependency: transitive
+    dependency: "direct dev"
     description:
       name: tonic
       url: "https://pub.dartlang.org"

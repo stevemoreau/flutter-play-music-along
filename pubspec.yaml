@@ -50,6 +50,7 @@ dev_dependencies:
   path_provider: ^1.5.1
   pigment: ^1.0.3
   sprintf: ^4.0.2
+  tonic: ^0.2.3
 
 flutter_icons:
   android: "launcher_icon"
