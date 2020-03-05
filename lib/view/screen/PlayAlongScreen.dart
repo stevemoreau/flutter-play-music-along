@@ -379,7 +379,7 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
       'D': Colors.yellow,
       'E': Colors.deepPurple,
       'F': Colors.blueAccent,
-      'G': Colors.teal,
+      'G': Colors.pinkAccent,
       'A': Colors.green,
       'B': Colors.orange,
     };
