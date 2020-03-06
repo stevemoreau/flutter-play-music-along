@@ -9,9 +9,11 @@
   - Select groups of notes to repeat
 - List midi files in application directory
 
-## 0.1 (in progress)
+## 0.1
 
 - Parse MIDI file test.mid (see assets/midi directory)
 - Play MIDI test.mid file along at fixed hard-coded tempo
   - Only on Android with custom flutter_midi required
 - Piano visualizer
+
+## 0.2 (in progress)

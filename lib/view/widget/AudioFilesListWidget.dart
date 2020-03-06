@@ -15,11 +15,6 @@ class AudioFilesListWidget extends StatefulWidget {
 }
 
 class _AudioFilesListWidgetState extends State<AudioFilesListWidget> {
-  @override
-  void initState() {
-    super.initState();
-  }
-
   Future<List<io.FileSystemEntity>> _getAudioFilesList() async {
     // FIXME smoreau: should have a better approach for next versions
     // BlocBuilder with individual file opening to now which track is available
