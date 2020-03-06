@@ -1,22 +1,12 @@
 # Play music along
 
-A POC application to play midi files with real-time instrument rendering
+A POC application to play midi files with real-time instrument rendering.
 
-# Version history
+Highly beta version!
 
-## 0.1 (in progress)
+Currently tricky to compile, since it depends on custom flutter_midi dependency.
+See [Change log](CHANGELOG.md) to check what is currently possible or not.
 
-- List midi files in application directory
-- Parse midi files and play it
-- Play tearing notes after loading
-- Piano visualizers
+# Screenshot
 
-WARNING: depends on unreleased modifications of flutter_midi. iOS unsupported yet (Android only).
-
-## Backlog
-
-- Add start/stop/pause controls
-- Display measure structure while playing
-- Set tempo +/-10 +/-1
-- Loop mode
-- Select groups of notes to repeat
+![Version 0.1](doc/version-0.1-piano-visualizer.png?raw=true "Version 0.1")
