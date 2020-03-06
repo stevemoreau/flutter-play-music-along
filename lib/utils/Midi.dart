@@ -64,6 +64,7 @@ class MidiFileInfo {
 
 class Midi {
   static final Midi _instance = Midi._privateConstructor();
+  static final midiParser = MidiParser();
 
   Midi._privateConstructor();
 
@@ -87,8 +88,7 @@ class Midi {
     return Future.sync(() {
       MidiFileInfo midiFileInfo = MidiFileInfo();
       Log.v(LogTag.MIDI, 'Parsing MIDI file ${midiFile.path}');
-      var parser = MidiParser();
-      MidiFile parsedMidi = parser.parseMidiFromFile(midiFile);
+      MidiFile parsedMidi = midiParser.parseMidiFromFile(midiFile);
       var tracksCount = parsedMidi.tracks.length;
       Log.v(LogTag.MIDI, 'Processing $tracksCount tracks');
 
