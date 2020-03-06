@@ -8,13 +8,11 @@ import 'package:play_music_along/utils/Log.dart';
 import 'package:play_music_along/utils/Midi.dart';
 import 'package:tonic/tonic.dart';
 
-class Visualizer extends StatefulWidget {
+abstract class Visualizer extends StatefulWidget {
   const Visualizer({Key key}) : super(key: key);
-
-  VisualizerState createState() => VisualizerState();
 }
 
-class VisualizerState<T extends Visualizer> extends State<T> {
+abstract class VisualizerState<T extends Visualizer> extends State<T> {
   @protected final Set activeNotes = Set<String>();
 
   @override
@@ -49,6 +47,4 @@ class VisualizerState<T extends Visualizer> extends State<T> {
       } catch (_) {}
     });
   }
-
-  Widget build(BuildContext context) { return null; }
 }
