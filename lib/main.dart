@@ -1,21 +1,18 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_analytics/observer.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_crashlytics/flutter_crashlytics.dart';
+import 'package:logging/logging.dart';
 import 'package:play_music_along/model/AudioFile.dart';
-import 'package:play_music_along/view/screen/Dummy.dart';
-import 'package:play_music_along/view/screen/HomeScreen.dart';
 import 'package:play_music_along/utils/Log.dart';
 import 'package:play_music_along/utils/i18n/bloc_provider_new.dart';
 import 'package:play_music_along/utils/i18n/multiling_bloc.dart';
 import 'package:play_music_along/utils/i18n/multiling_global_translations.dart';
 import 'package:play_music_along/values/colors.dart';
 import 'package:play_music_along/view/screen/PlayAlongScreen.dart';
-import 'package:logging/logging.dart';
 
 Future main() async {
   bool isInDebugMode = !kReleaseMode;

@@ -1,20 +1,19 @@
 import 'dart:io';
-import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_midi/flutter_midi.dart';
+import "package:intl/intl.dart";
+import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:play_music_along/model/AudioFile.dart';
 import 'package:play_music_along/utils/Log.dart';
 import 'package:play_music_along/utils/Midi.dart';
-import 'package:play_music_along/view/widget/PianoVisualizer.dart';
 import 'package:play_music_along/view/widget/SliverHeader.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart';
-import "package:intl/intl.dart";
 import 'package:play_music_along/view/widget/TearingNote.dart';
+import 'package:play_music_along/view/widget/visualizer/PianoVisualizer.dart';
 import 'package:tonic/tonic.dart';
 
 class PlayAlongScreen extends StatefulWidget {
