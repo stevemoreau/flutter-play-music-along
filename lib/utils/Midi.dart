@@ -204,11 +204,15 @@ class Midi {
 }
 
 class MidiPitch {
-  final int midiNumber;
+  int midiNumber;
   Pitch pitch;
 
-  MidiPitch(this.midiNumber) {
-    this.pitch = Pitch.fromMidiNumber(midiNumber);
+  MidiPitch({this.midiNumber, this.pitch}) {
+    if (midiNumber != null) {
+      pitch = Pitch.fromMidiNumber(midiNumber);
+    } else {
+      midiNumber = pitch.midiNumber;
+    }
   }
 
   /// Note name without accidental (among 7 main notes A..G)

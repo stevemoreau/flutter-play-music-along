@@ -32,7 +32,7 @@ class TearingNote extends StatelessWidget {
         child: Container(
             height: height,
             padding: EdgeInsets.only(bottom: 5),
-            color: note is Rest ? Colors.transparent : MidiPitch(midiNumber).pitchColor,
+            color: note is Rest ? Colors.transparent : MidiPitch(midiNumber: midiNumber).pitchColor,
             width: width,
             child: Align(
                 alignment: FractionalOffset.bottomCenter,

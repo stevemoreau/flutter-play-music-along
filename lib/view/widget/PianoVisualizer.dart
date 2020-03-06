@@ -105,7 +105,7 @@ class PianoVisualizerState extends State<PianoVisualizer> {
     final pitchName = pitch.toString();
     final accidental = pitch.accidentalSemitones > 0;
 
-    final color = _activeNotes.contains(pitchName) ? Colors.red : Colors.white;
+    final keyColor = accidental ? Colors.black : Colors.white;
 
     final pianoKey = Stack(
       children: <Widget>[
@@ -114,7 +114,7 @@ class PianoVisualizerState extends State<PianoVisualizer> {
             hint: pitchName,
             child: Material(
                 borderRadius: _borderRadius,
-                color: accidental ? Colors.black : color,
+                color: _activeNotes.contains(pitchName) ? MidiPitch(pitch: pitch).pitchColor : keyColor,
                 child: InkWell(
                   borderRadius: _borderRadius,
                   highlightColor: Colors.grey,

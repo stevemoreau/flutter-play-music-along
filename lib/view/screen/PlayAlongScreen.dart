@@ -207,7 +207,7 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
   double _getNoteWidth(Pitch pitch) {
     double width = 24;
     bool isBlackKey = pitch.accidentalSemitones > 0;
-    bool isWhiteKeyBetweenTwoBlackKeys = ['D', 'G', 'A'].contains(MidiPitch(pitch.midiNumber).pitchBaseName);
+    bool isWhiteKeyBetweenTwoBlackKeys = ['D', 'G', 'A'].contains(MidiPitch(midiNumber: pitch.midiNumber).pitchBaseName);
     if (isBlackKey) {
       width = width*1/4;
     } else if (isWhiteKeyBetweenTwoBlackKeys) {
