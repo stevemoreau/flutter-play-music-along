@@ -8,12 +8,14 @@ import 'package:flutter_midi/flutter_midi.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:play_music_along/model/AudioFile.dart';
+import 'package:play_music_along/notifier/PlaybackNotifier.dart';
 import 'package:play_music_along/utils/Log.dart';
 import 'package:play_music_along/utils/Midi.dart';
 import 'package:play_music_along/view/widget/AudioControls.dart';
 import 'package:play_music_along/view/widget/TearingNote.dart';
 import 'package:play_music_along/view/widget/visualizer/PianoVisualizer.dart';
 import 'package:tonic/tonic.dart';
+import 'package:provider/provider.dart';
 
 class PlayAlongScreen extends StatefulWidget {
   final AudioFile audioFile;
@@ -71,10 +73,14 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
 
   @override
   Widget build(BuildContext context) {
+    Provider.of<PlaybackNotifier>(this.context, listen: false).setAudioFile(widget.audioFile);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_midiFileInfo.overallHeight > 0) {
-        Log.v(LogTag.MIDI, 'Build done, playing file');
-        // FIXME smoreau: enable control buttons only when ready
+        Log.v(LogTag.MIDI, 'Build done, ready to play file');
+        // Provider.of<PlaybackNotifier>(context, listen: false).readyToPlay();
+        var maxExtend = _scrollController.position.maxScrollExtent;
+        _scrollController.jumpTo(maxExtend);
       }
     });
 

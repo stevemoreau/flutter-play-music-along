@@ -7,12 +7,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_crashlytics/flutter_crashlytics.dart';
 import 'package:logging/logging.dart';
 import 'package:play_music_along/model/AudioFile.dart';
+import 'package:play_music_along/notifier/PlaybackNotifier.dart';
 import 'package:play_music_along/utils/Log.dart';
 import 'package:play_music_along/utils/i18n/bloc_provider_new.dart';
 import 'package:play_music_along/utils/i18n/multiling_bloc.dart';
 import 'package:play_music_along/utils/i18n/multiling_global_translations.dart';
 import 'package:play_music_along/values/colors.dart';
 import 'package:play_music_along/view/screen/PlayAlongScreen.dart';
+import 'package:provider/provider.dart';
 
 Future main() async {
   bool isInDebugMode = !kReleaseMode;
@@ -26,7 +28,7 @@ Future main() async {
       FlutterError.dumpErrorToConsole(details);
     };
 
-    runApp(MyApp());
+    _run();
 
     // FIXME smoreau: catcher sounds promising but prevents application to assemble
 //    CatcherOptions debugOptions = CatcherOptions(DialogReportMode(), [ConsoleHandler()]);
@@ -42,12 +44,18 @@ Future main() async {
     await allTranslations.init();
 
     runZoned<Future<Null>>(() async {
-      runApp(MyApp());
+      _run();
     }, onError: (error, stackTrace) async {
       await FlutterCrashlytics()
           .reportCrash(error, stackTrace, forceCrash: false);
     });
   }
+}
+
+void _run() {
+  runApp(MultiProvider(providers: [
+    ChangeNotifierProvider(create: (context) => PlaybackNotifier(context)),
+  ], child: MyApp()));
 }
 
 class MyApp extends StatefulWidget {
