@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'dart:math';
+import 'dart:math' as math;
 
 import 'package:dart_midi/dart_midi.dart';
 import 'package:flutter/material.dart';
@@ -45,10 +45,30 @@ class Rest extends Note {
   }
 }
 
+class MidiNumberRange {
+  int min = 0;
+  int max = 127;
+
+  MidiNumberRange({this.min, this.max});
+
+  int get count => max - min + 1;
+
+  int midiNumber(int index) => min + index;
+
+  int get octaveStart => Pitch.fromMidiNumber(min).octave - 1;
+  int get octaveCount =>
+      Pitch.fromMidiNumber(max).octave - Pitch.fromMidiNumber(min).octave + 1;
+
+  updateRange(int noteNumber) {
+    min = math.min(noteNumber, min);
+    max = math.max(noteNumber, max);
+  }
+}
+
 class MidiFileInfo {
   Measure measure = Measure();
-  var restsAndNotesByMidiNumber = {};
-  var midiNumberRange = {'min': 0, 'max': 127};
+  Map restsAndNotesByMidiNumber = {};
+  MidiNumberRange midiNumberRange = MidiNumberRange();
   double overallDurationInTicks = 0;
   double averageNoteDuration = 200;
 
@@ -94,7 +114,7 @@ class Midi {
 
       midiFileInfo.measure.ticksPerBeat = parsedMidi.header.ticksPerBeat;
 
-      var range = {'min': 127, 'max': 0};
+      var range = MidiNumberRange(min: 127, max: 0);
       List<double> notesDurations = [];
 
       for (var track in parsedMidi.tracks) {
@@ -123,8 +143,7 @@ class Midi {
                 'Starting note $noteNumber at $currentOffsetInTicks',
                 midiNumber: noteNumber);
 
-            range['min'] = min(noteNumber, range['min']);
-            range['max'] = max(noteNumber, range['max']);
+            range.updateRange(noteNumber);
 
             var notesAndRestsList =
                 midiFileInfo.restsAndNotesByMidiNumber[noteNumber];
@@ -176,8 +195,8 @@ class Midi {
               notesAndRestsList.add(Rest(currentOffsetInTicks));
             }
 
-            midiFileInfo.overallDurationInTicks =
-                max(currentOffsetInTicks, midiFileInfo.overallDurationInTicks);
+            midiFileInfo.overallDurationInTicks = math.max(
+                currentOffsetInTicks, midiFileInfo.overallDurationInTicks);
           }
         }
       }
@@ -198,7 +217,8 @@ class Midi {
 
   static configureMidi(String midiFile, String soundBank) async {
     FlutterMidi.unmute();
-    FlutterMidi.loadMidiFile(midiFilePath: midiFile, soundBankFilePath: soundBank);
+    FlutterMidi.loadMidiFile(
+        midiFilePath: midiFile, soundBankFilePath: soundBank);
   }
 }
 

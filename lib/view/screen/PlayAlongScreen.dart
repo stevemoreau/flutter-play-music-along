@@ -112,11 +112,10 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 controller: _tearingNotesHorizontalScrollController,
-                itemCount: _midiFileInfo.midiNumberRange['max'] -
-                    _midiFileInfo.midiNumberRange['min'],
+                itemCount: _midiFileInfo.midiNumberRange.count,
                 itemBuilder: (BuildContext context, int index) {
                   return getMidiNumberColumn(
-                      _midiFileInfo.midiNumberRange['min'] + index);
+                      _midiFileInfo.midiNumberRange.midiNumber(index));
                 },
               ),
             ),
@@ -127,6 +126,7 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
         height: 120,
         child: PianoVisualizer(
           keyWidth: 20,
+          midiNumberRange: _midiFileInfo.midiNumberRange,
           scrollController: _visualizerHorizontalScrollController,
           onHorizontalScrolling: _onHorizontalScrolling,
         ),

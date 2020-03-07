@@ -8,13 +8,15 @@ class PianoVisualizer extends Visualizer {
   final double keyWidth;
   final ScrollController scrollController;
   final Function onHorizontalScrolling;
+  final MidiNumberRange midiNumberRange;
 
-  const PianoVisualizer(
-      {Key key,
-      @required this.keyWidth,
-      this.scrollController,
-      this.onHorizontalScrolling})
-      : super(key: key);
+  const PianoVisualizer({
+    Key key,
+    @required this.keyWidth,
+    this.scrollController,
+    this.onHorizontalScrolling,
+    this.midiNumberRange,
+  }) : super(key: key);
 
   @override
   PianoVisualizerState createState() => PianoVisualizerState();
@@ -31,11 +33,11 @@ class PianoVisualizerState extends VisualizerState<PianoVisualizer> {
       onNotification: (UserScrollNotification notification) =>
           widget.onHorizontalScrolling(notification, visualizerOrigin: true),
       child: ListView.builder(
-        itemCount: 7,
+        itemCount: widget.midiNumberRange.octaveCount,
         controller: widget.scrollController,
         scrollDirection: Axis.horizontal,
         itemBuilder: (BuildContext context, int index) {
-          final int octave = index + 1;
+          final int octave = widget.midiNumberRange.octaveStart + index;
           return SafeArea(
             child: Stack(children: <Widget>[
               Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
