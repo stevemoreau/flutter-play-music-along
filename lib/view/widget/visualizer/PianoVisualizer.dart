@@ -6,8 +6,15 @@ import 'package:tonic/tonic.dart';
 
 class PianoVisualizer extends Visualizer {
   final double keyWidth;
+  final ScrollController scrollController;
+  final Function onHorizontalScrolling;
 
-  const PianoVisualizer({Key key, @required this.keyWidth}) : super(key: key);
+  const PianoVisualizer(
+      {Key key,
+      @required this.keyWidth,
+      this.scrollController,
+      this.onHorizontalScrolling})
+      : super(key: key);
 
   @override
   PianoVisualizerState createState() => PianoVisualizerState();
@@ -20,44 +27,48 @@ class PianoVisualizerState extends VisualizerState<PianoVisualizer> {
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      itemCount: 7,
-      controller: ScrollController(initialScrollOffset: 0.0),
-      scrollDirection: Axis.horizontal,
-      itemBuilder: (BuildContext context, int index) {
-        final int octave = index + 1;
-        return SafeArea(
-          child: Stack(children: <Widget>[
-            Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
-              _buildKey('C', octave),
-              _buildKey('D', octave),
-              _buildKey('E', octave),
-              _buildKey('F', octave),
-              _buildKey('G', octave),
-              _buildKey('A', octave),
-              _buildKey('B', octave),
+    return NotificationListener<UserScrollNotification>(
+      onNotification: (UserScrollNotification notification) =>
+          widget.onHorizontalScrolling(notification, visualizerOrigin: true),
+      child: ListView.builder(
+        itemCount: 7,
+        controller: widget.scrollController,
+        scrollDirection: Axis.horizontal,
+        itemBuilder: (BuildContext context, int index) {
+          final int octave = index + 1;
+          return SafeArea(
+            child: Stack(children: <Widget>[
+              Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
+                _buildKey('C', octave),
+                _buildKey('D', octave),
+                _buildKey('E', octave),
+                _buildKey('F', octave),
+                _buildKey('G', octave),
+                _buildKey('A', octave),
+                _buildKey('B', octave),
+              ]),
+              Positioned(
+                  left: 0.0,
+                  right: 0.0,
+                  bottom: 50,
+                  top: 0.0,
+                  child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        Container(width: widget.keyWidth * .5),
+                        _buildKey('C♯', octave),
+                        _buildKey('D♯', octave),
+                        Container(width: widget.keyWidth),
+                        _buildKey('F♯', octave),
+                        _buildKey('G♯', octave),
+                        _buildKey('A♯', octave),
+                        Container(width: widget.keyWidth * .5),
+                      ])),
             ]),
-            Positioned(
-                left: 0.0,
-                right: 0.0,
-                bottom: 50,
-                top: 0.0,
-                child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      Container(width: widget.keyWidth * .5),
-                      _buildKey('C♯', octave),
-                      _buildKey('D♯', octave),
-                      Container(width: widget.keyWidth),
-                      _buildKey('F♯', octave),
-                      _buildKey('G♯', octave),
-                      _buildKey('A♯', octave),
-                      Container(width: widget.keyWidth * .5),
-                    ])),
-          ]),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 
@@ -75,7 +86,9 @@ class PianoVisualizerState extends VisualizerState<PianoVisualizer> {
             hint: pitchName,
             child: Material(
                 borderRadius: _borderRadius,
-                color: activeNotes.contains(pitchName) ? MidiPitch(pitch: pitch).pitchColor : keyColor,
+                color: activeNotes.contains(pitchName)
+                    ? MidiPitch(pitch: pitch).pitchColor
+                    : keyColor,
                 child: InkWell(
                   borderRadius: _borderRadius,
                   highlightColor: Colors.grey,

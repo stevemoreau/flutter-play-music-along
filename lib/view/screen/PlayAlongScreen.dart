@@ -30,7 +30,9 @@ class PlayAlongScreen extends StatefulWidget {
 
 class _PlayAlongScreenState extends State<PlayAlongScreen> {
   MidiFileInfo _midiFileInfo = MidiFileInfo();
-  ScrollController _scrollController = ScrollController();
+  ScrollController _verticalScrollController = ScrollController();
+  ScrollController _tearingNotesHorizontalScrollController = ScrollController();
+  ScrollController _visualizerHorizontalScrollController = ScrollController();
 
   @override
   void initState() {
@@ -82,8 +84,8 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
       if (_midiFileInfo.overallHeight > 0) {
         Log.v(LogTag.MIDI, 'Build done, ready to play file');
         // Provider.of<PlaybackNotifier>(context, listen: false).readyToPlay();
-        var maxExtend = _scrollController.position.maxScrollExtent;
-        _scrollController.jumpTo(maxExtend);
+        var maxExtend = _verticalScrollController.position.maxScrollExtent;
+        _verticalScrollController.jumpTo(maxExtend);
       }
     });
 
@@ -92,11 +94,11 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
     return Scaffold(
       resizeToAvoidBottomPadding: false,
       body: CustomScrollView(
-        controller: _scrollController,
+        controller: _verticalScrollController,
         slivers: <Widget>[
           AudioControls(
             title: 'Playing file ${widget.audioFile.path}',
-            scrollController: _scrollController,
+            scrollController: _verticalScrollController,
             midiFileInfo: _midiFileInfo,
           ),
           SliverToBoxAdapter(
@@ -104,23 +106,41 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
             padding: EdgeInsets.only(top: MediaQuery.of(context).size.height),
             height: _midiFileInfo.overallHeight,
             color: Colors.yellow[50],
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: _midiFileInfo.midiNumberRange['max'] -
-                  _midiFileInfo.midiNumberRange['min'],
-              itemBuilder: (BuildContext context, int index) {
-                return getMidiNumberColumn(
-                    _midiFileInfo.midiNumberRange['min'] + index);
-              },
+            child: NotificationListener<UserScrollNotification>(
+              onNotification: (UserScrollNotification notification) =>
+                  _onHorizontalScrolling(notification),
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                controller: _tearingNotesHorizontalScrollController,
+                itemCount: _midiFileInfo.midiNumberRange['max'] -
+                    _midiFileInfo.midiNumberRange['min'],
+                itemBuilder: (BuildContext context, int index) {
+                  return getMidiNumberColumn(
+                      _midiFileInfo.midiNumberRange['min'] + index);
+                },
+              ),
             ),
           ))
         ],
       ),
       bottomNavigationBar: Container(
         height: 120,
-        child: PianoVisualizer(keyWidth: 20),
+        child: PianoVisualizer(
+          keyWidth: 20,
+          scrollController: _visualizerHorizontalScrollController,
+          onHorizontalScrolling: _onHorizontalScrolling,
+        ),
       ),
     );
+  }
+
+  _onHorizontalScrolling(UserScrollNotification notification,
+      {bool visualizerOrigin = false}) {
+    (visualizerOrigin
+            ? _tearingNotesHorizontalScrollController
+            : _visualizerHorizontalScrollController)
+        .jumpTo(notification.metrics.pixels);
+    return false;
   }
 
   Widget getMidiNumberColumn(int midiNumber) {
