@@ -59,3 +59,6 @@ const double font_overline = 11.7;
 const double border_radius = 4.0;
 const double divider_indent = 20.0;
 const double bar_chart_height = 240.0;
+
+const double PANEL_OPENED = 90;
+const double PANEL_CLOSED = 45;

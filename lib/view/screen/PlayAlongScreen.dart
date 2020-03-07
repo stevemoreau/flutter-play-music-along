@@ -11,6 +11,7 @@ import 'package:play_music_along/model/AudioFile.dart';
 import 'package:play_music_along/notifier/PlaybackNotifier.dart';
 import 'package:play_music_along/utils/Log.dart';
 import 'package:play_music_along/utils/Midi.dart';
+import 'package:play_music_along/values/dimens.dart';
 import 'package:play_music_along/view/widget/AudioControls.dart';
 import 'package:play_music_along/view/widget/TearingNote.dart';
 import 'package:play_music_along/view/widget/visualizer/PianoVisualizer.dart';
@@ -34,6 +35,7 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
   ScrollController _verticalScrollController = ScrollController();
   ScrollController _tearingNotesHorizontalScrollController = ScrollController();
   ScrollController _visualizerHorizontalScrollController = ScrollController();
+  PanelController _panelController = new PanelController();
 
   @override
   void initState() {
@@ -92,49 +94,54 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
 
     Log.v(LogTag.MIDI,
         'Entering build(), OVERALL HEIGHT = ${_midiFileInfo.overallHeight}');
-    return Scaffold(
-      // resizeToAvoidBottomPadding: false,
-      body: SlidingUpPanel(
-        slideDirection: SlideDirection.DOWN,
-        maxHeight: 90,
-        minHeight: 50,
-        panel: AudioControls(
-          title: 'Playing file ${widget.audioFile.path}',
-          scrollController: _verticalScrollController,
-          midiFileInfo: _midiFileInfo,
-        ),
-        body: CustomScrollView(
-          controller: _verticalScrollController,
-          slivers: <Widget>[
-            SliverToBoxAdapter(
-                child: Container(
-              padding: EdgeInsets.only(top: MediaQuery.of(context).size.height),
-              height: _midiFileInfo.overallHeight,
-              color: Colors.yellow[50],
-              child: NotificationListener<UserScrollNotification>(
-                onNotification: (UserScrollNotification notification) =>
-                    _onHorizontalScrolling(notification),
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  controller: _tearingNotesHorizontalScrollController,
-                  itemCount: _midiFileInfo.midiNumberRange.count,
-                  itemBuilder: (BuildContext context, int index) {
-                    return getMidiNumberColumn(
-                        _midiFileInfo.midiNumberRange.midiNumber(index));
-                  },
+    return SafeArea(
+      child: Scaffold(
+        resizeToAvoidBottomPadding: false,
+        body: SlidingUpPanel(
+          defaultPanelState: PanelState.OPEN,
+          slideDirection: SlideDirection.DOWN,
+          maxHeight: PANEL_OPENED,
+          minHeight: PANEL_CLOSED,
+          controller: _panelController,
+          panel: AudioControls(
+            title: 'Playing file ${widget.audioFile.path}',
+            scrollController: _verticalScrollController,
+            panelController: _panelController,
+            midiFileInfo: _midiFileInfo,
+          ),
+          body: CustomScrollView(
+            controller: _verticalScrollController,
+            slivers: <Widget>[
+              SliverToBoxAdapter(
+                  child: Container(
+                padding: EdgeInsets.only(top: MediaQuery.of(context).size.height),
+                height: _midiFileInfo.overallHeight,
+                color: Colors.yellow[50],
+                child: NotificationListener<UserScrollNotification>(
+                  onNotification: (UserScrollNotification notification) =>
+                      _onHorizontalScrolling(notification),
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    controller: _tearingNotesHorizontalScrollController,
+                    itemCount: _midiFileInfo.midiNumberRange.count,
+                    itemBuilder: (BuildContext context, int index) {
+                      return getMidiNumberColumn(
+                          _midiFileInfo.midiNumberRange.midiNumber(index));
+                    },
+                  ),
                 ),
-              ),
-            ))
-          ],
+              ))
+            ],
+          ),
         ),
-      ),
-      bottomNavigationBar: Container(
-        height: 120,
-        child: PianoVisualizer(
-          keyWidth: 20,
-          midiNumberRange: _midiFileInfo.midiNumberRange,
-          scrollController: _visualizerHorizontalScrollController,
-          onHorizontalScrolling: _onHorizontalScrolling,
+        bottomNavigationBar: Container(
+          height: 120,
+          child: PianoVisualizer(
+            keyWidth: 20,
+            midiNumberRange: _midiFileInfo.midiNumberRange,
+            scrollController: _visualizerHorizontalScrollController,
+            onHorizontalScrolling: _onHorizontalScrolling,
+          ),
         ),
       ),
     );
