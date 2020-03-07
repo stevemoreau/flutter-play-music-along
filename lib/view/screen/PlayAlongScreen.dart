@@ -96,7 +96,7 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
         'Entering build(), OVERALL HEIGHT = ${_midiFileInfo.overallHeight}');
     return SafeArea(
       child: Scaffold(
-        resizeToAvoidBottomPadding: false,
+        //resizeToAvoidBottomPadding: false,
         body: SlidingUpPanel(
           defaultPanelState: PanelState.OPEN,
           slideDirection: SlideDirection.DOWN,
@@ -109,33 +109,32 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
             panelController: _panelController,
             midiFileInfo: _midiFileInfo,
           ),
-          body: CustomScrollView(
+          body: SingleChildScrollView(
             controller: _verticalScrollController,
-            slivers: <Widget>[
-              SliverToBoxAdapter(
-                  child: Container(
-                padding: EdgeInsets.only(top: MediaQuery.of(context).size.height),
-                height: _midiFileInfo.overallHeight,
-                color: Colors.yellow[50],
-                child: NotificationListener<UserScrollNotification>(
-                  onNotification: (UserScrollNotification notification) =>
-                      _onHorizontalScrolling(notification),
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    controller: _tearingNotesHorizontalScrollController,
-                    itemCount: _midiFileInfo.midiNumberRange.count,
-                    itemBuilder: (BuildContext context, int index) {
-                      return getMidiNumberColumn(
-                          _midiFileInfo.midiNumberRange.midiNumber(index));
-                    },
-                  ),
+            child: Container(
+              // FIXME smoreau: regression, the bottom was correctly aligned above visualizer above, run bisect
+              margin: EdgeInsets.only(bottom: VISUALIZER_HEIGHT + 30),
+              padding: EdgeInsets.only(top: MediaQuery.of(context).size.height),
+              height: _midiFileInfo.overallHeight,
+              color: Colors.yellow[50],
+              child: NotificationListener<UserScrollNotification>(
+                onNotification: (UserScrollNotification notification) =>
+                    _onHorizontalScrolling(notification),
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  controller: _tearingNotesHorizontalScrollController,
+                  itemCount: _midiFileInfo.midiNumberRange.count,
+                  itemBuilder: (BuildContext context, int index) {
+                    return getMidiNumberColumn(
+                        _midiFileInfo.midiNumberRange.midiNumber(index));
+                  },
                 ),
-              ))
-            ],
+              ),
+            ),
           ),
         ),
         bottomNavigationBar: Container(
-          height: 120,
+          height: VISUALIZER_HEIGHT,
           child: PianoVisualizer(
             keyWidth: 20,
             midiNumberRange: _midiFileInfo.midiNumberRange,

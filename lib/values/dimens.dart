@@ -62,3 +62,4 @@ const double bar_chart_height = 240.0;
 
 const double PANEL_OPENED = 90;
 const double PANEL_CLOSED = 45;
+const double VISUALIZER_HEIGHT = 120;
