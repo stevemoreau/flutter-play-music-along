@@ -60,7 +60,7 @@ class MidiNumberRange {
       Pitch.fromMidiNumber(max).octave - Pitch.fromMidiNumber(min).octave + 1;
 
   updateRange(int noteNumber) {
-    min = math.min(noteNumber, min);
+    min = math.min(12*(noteNumber ~/ 12), min);
     max = math.max(noteNumber, max);
   }
 }
