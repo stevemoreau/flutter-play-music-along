@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:play_music_along/notifier/PlaybackNotifier.dart';
 import 'package:play_music_along/utils/Midi.dart';
 import 'package:play_music_along/view/widget/visualizer/Visualizer.dart';
+import 'package:provider/provider.dart';
 import 'package:tonic/tonic.dart';
 
 class PianoVisualizer extends Visualizer {
@@ -29,49 +31,57 @@ class PianoVisualizerState extends VisualizerState<PianoVisualizer> {
 
   @override
   Widget build(BuildContext context) {
-    return NotificationListener<UserScrollNotification>(
-      onNotification: (UserScrollNotification notification) =>
-          widget.onHorizontalScrolling(notification, visualizerOrigin: true),
-      child: ListView.builder(
-        itemCount: widget.midiNumberRange.octaveCount,
-        controller: widget.scrollController,
-        scrollDirection: Axis.horizontal,
-        itemBuilder: (BuildContext context, int index) {
-          final int octave = widget.midiNumberRange.octaveStart + index;
-          return SafeArea(
-            child: Stack(children: <Widget>[
-              Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
-                _buildKey('C', octave),
-                _buildKey('D', octave),
-                _buildKey('E', octave),
-                _buildKey('F', octave),
-                _buildKey('G', octave),
-                _buildKey('A', octave),
-                _buildKey('B', octave),
+    return Consumer<PlaybackNotifier>(
+        builder: (context, playbackNotifier, child) {
+      if (!playbackNotifier.audioFile.playing) {
+
+        activeNotes.clear();
+      }
+
+      return NotificationListener<UserScrollNotification>(
+        onNotification: (UserScrollNotification notification) =>
+            widget.onHorizontalScrolling(notification, visualizerOrigin: true),
+        child: ListView.builder(
+          itemCount: widget.midiNumberRange.octaveCount,
+          controller: widget.scrollController,
+          scrollDirection: Axis.horizontal,
+          itemBuilder: (BuildContext context, int index) {
+            final int octave = widget.midiNumberRange.octaveStart + index;
+            return SafeArea(
+              child: Stack(children: <Widget>[
+                Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
+                  _buildKey('C', octave),
+                  _buildKey('D', octave),
+                  _buildKey('E', octave),
+                  _buildKey('F', octave),
+                  _buildKey('G', octave),
+                  _buildKey('A', octave),
+                  _buildKey('B', octave),
+                ]),
+                Positioned(
+                    left: 0.0,
+                    right: 0.0,
+                    bottom: 50,
+                    top: 0.0,
+                    child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          Container(width: widget.keyWidth * .5),
+                          _buildKey('C♯', octave),
+                          _buildKey('D♯', octave),
+                          Container(width: widget.keyWidth),
+                          _buildKey('F♯', octave),
+                          _buildKey('G♯', octave),
+                          _buildKey('A♯', octave),
+                          Container(width: widget.keyWidth * .5),
+                        ])),
               ]),
-              Positioned(
-                  left: 0.0,
-                  right: 0.0,
-                  bottom: 50,
-                  top: 0.0,
-                  child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
-                        Container(width: widget.keyWidth * .5),
-                        _buildKey('C♯', octave),
-                        _buildKey('D♯', octave),
-                        Container(width: widget.keyWidth),
-                        _buildKey('F♯', octave),
-                        _buildKey('G♯', octave),
-                        _buildKey('A♯', octave),
-                        Container(width: widget.keyWidth * .5),
-                      ])),
-            ]),
-          );
-        },
-      ),
-    );
+            );
+          },
+        ),
+      );
+    });
   }
 
   Widget _buildKey(String noteName, int octave) {

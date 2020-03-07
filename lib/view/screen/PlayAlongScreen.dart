@@ -80,8 +80,7 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
 
   @override
   Widget build(BuildContext context) {
-    Provider.of<PlaybackNotifier>(this.context, listen: false)
-        .setAudioFile(widget.audioFile);
+    Provider.of<PlaybackNotifier>(this.context).setAudioFile(widget.audioFile);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_midiFileInfo.overallHeight > 0) {

@@ -17,4 +17,14 @@ class PlaybackNotifier extends ChangeNotifier {
     audioFile.readyToPlay = true;
     notifyListeners();
   }
+
+  startPlaying() {
+    audioFile.playing = true;
+    //notifyListeners();
+  }
+
+  stopPlaying() {
+    audioFile.playing = false;
+    notifyListeners();
+  }
 }

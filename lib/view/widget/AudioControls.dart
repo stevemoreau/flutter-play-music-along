@@ -175,7 +175,7 @@ class _AudioControlsState extends State<AudioControls> {
     Log.i(LogTag.MIDI, 'Start playing');
     widget.panelController.animatePanelToPosition(0);
     _startScrolling();
-
+    Provider.of<PlaybackNotifier>(this.context).startPlaying();
     return FlutterMidi.playCurrentMidiFile(tempoFactor: _tempoFactor);
   }
 
@@ -189,6 +189,8 @@ class _AudioControlsState extends State<AudioControls> {
     setState(() {
       _playing = false;
     });
+
+    Provider.of<PlaybackNotifier>(this.context).stopPlaying();
 
     // FIXME smoreau: right way to cancel the scroll ? cancel the promise ?
     widget.scrollController.jumpTo(widget.scrollController.offset);
