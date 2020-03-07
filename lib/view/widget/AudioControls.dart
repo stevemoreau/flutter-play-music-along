@@ -34,19 +34,11 @@ class _AudioControlsState extends State<AudioControls> {
   Widget build(BuildContext context) {
     return Consumer<PlaybackNotifier>(
         builder: (context, playbackNotifier, child) {
-      return SliverAppBar(
-        expandedHeight: sliver_appbar_height,
-        floating: true,
-        backgroundColor: MyColors.bluegreen800,
-        flexibleSpace: FlexibleSpaceBar(
-          stretchModes: <StretchMode>[
-            StretchMode.zoomBackground,
-            StretchMode.blurBackground,
-            StretchMode.fadeTitle,
-          ],
-          centerTitle: false,
-          titlePadding: EdgeInsets.only(bottom: 10, left: 50),
-          title: Column(
+      return Container(
+        color: MyColors.bluegreen800,
+        padding: EdgeInsets.symmetric(horizontal: 20),
+        child: Expanded(
+          child: Column(
             mainAxisAlignment: MainAxisAlignment.end,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
@@ -104,11 +96,7 @@ class _AudioControlsState extends State<AudioControls> {
                 ],
               )
             ],
-          ),
-          background: Image.asset(
-            "assets/images/background.png",
-            fit: BoxFit.cover,
-          ),
+          )
         ),
       );
     });

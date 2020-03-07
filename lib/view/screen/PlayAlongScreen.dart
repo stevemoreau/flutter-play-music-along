@@ -14,6 +14,7 @@ import 'package:play_music_along/utils/Midi.dart';
 import 'package:play_music_along/view/widget/AudioControls.dart';
 import 'package:play_music_along/view/widget/TearingNote.dart';
 import 'package:play_music_along/view/widget/visualizer/PianoVisualizer.dart';
+import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:tonic/tonic.dart';
 import 'package:provider/provider.dart';
 
@@ -92,35 +93,40 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
     Log.v(LogTag.MIDI,
         'Entering build(), OVERALL HEIGHT = ${_midiFileInfo.overallHeight}');
     return Scaffold(
-      resizeToAvoidBottomPadding: false,
-      body: CustomScrollView(
-        controller: _verticalScrollController,
-        slivers: <Widget>[
-          AudioControls(
-            title: 'Playing file ${widget.audioFile.path}',
-            scrollController: _verticalScrollController,
-            midiFileInfo: _midiFileInfo,
-          ),
-          SliverToBoxAdapter(
-              child: Container(
-            padding: EdgeInsets.only(top: MediaQuery.of(context).size.height),
-            height: _midiFileInfo.overallHeight,
-            color: Colors.yellow[50],
-            child: NotificationListener<UserScrollNotification>(
-              onNotification: (UserScrollNotification notification) =>
-                  _onHorizontalScrolling(notification),
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                controller: _tearingNotesHorizontalScrollController,
-                itemCount: _midiFileInfo.midiNumberRange.count,
-                itemBuilder: (BuildContext context, int index) {
-                  return getMidiNumberColumn(
-                      _midiFileInfo.midiNumberRange.midiNumber(index));
-                },
+      // resizeToAvoidBottomPadding: false,
+      body: SlidingUpPanel(
+        slideDirection: SlideDirection.DOWN,
+        maxHeight: 90,
+        minHeight: 50,
+        panel: AudioControls(
+          title: 'Playing file ${widget.audioFile.path}',
+          scrollController: _verticalScrollController,
+          midiFileInfo: _midiFileInfo,
+        ),
+        body: CustomScrollView(
+          controller: _verticalScrollController,
+          slivers: <Widget>[
+            SliverToBoxAdapter(
+                child: Container(
+              padding: EdgeInsets.only(top: MediaQuery.of(context).size.height),
+              height: _midiFileInfo.overallHeight,
+              color: Colors.yellow[50],
+              child: NotificationListener<UserScrollNotification>(
+                onNotification: (UserScrollNotification notification) =>
+                    _onHorizontalScrolling(notification),
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  controller: _tearingNotesHorizontalScrollController,
+                  itemCount: _midiFileInfo.midiNumberRange.count,
+                  itemBuilder: (BuildContext context, int index) {
+                    return getMidiNumberColumn(
+                        _midiFileInfo.midiNumberRange.midiNumber(index));
+                  },
+                ),
               ),
-            ),
-          ))
-        ],
+            ))
+          ],
+        ),
       ),
       bottomNavigationBar: Container(
         height: 120,
