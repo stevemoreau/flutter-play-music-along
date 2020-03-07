@@ -1,12 +1,14 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_midi/flutter_midi.dart';
+import "package:intl/intl.dart";
 import 'package:play_music_along/notifier/PlaybackNotifier.dart';
 import 'package:play_music_along/utils/Log.dart';
+import 'package:play_music_along/utils/Midi.dart';
 import 'package:play_music_along/values/colors.dart';
 import 'package:play_music_along/values/dimens.dart';
-import "package:intl/intl.dart";
-import 'package:play_music_along/utils/Midi.dart';
-import 'package:flutter_midi/flutter_midi.dart';
 import 'package:provider/provider.dart';
 
 class AudioControls extends StatefulWidget {
@@ -53,7 +55,7 @@ class _AudioControlsState extends State<AudioControls> {
                     color: Colors.white,
                     fontSize: 16.0,
                   )),
-              Text('Tempo: 20%',
+              Text('Tempo: ${(_tempoFactor * 100).round()}%',
                   style: TextStyle(
                     fontFamily: 'Regular',
                     color: Colors.white,
@@ -76,6 +78,24 @@ class _AudioControlsState extends State<AudioControls> {
                       onPressed: _stop,
                       icon: Icon(
                         Icons.stop,
+                        color: Colors.white,
+                        semanticLabel:
+                            'Stop playing and reset current to slection start',
+                      )),
+                  IconButton(
+                      padding: EdgeInsets.all(2),
+                      onPressed: () => _tempo(5),
+                      icon: Icon(
+                        Icons.add,
+                        color: Colors.white,
+                        semanticLabel:
+                            'Stop playing and reset current to slection start',
+                      )),
+                  IconButton(
+                      padding: EdgeInsets.all(2),
+                      onPressed: () => _tempo(-5),
+                      icon: Icon(
+                        Icons.remove,
                         color: Colors.white,
                         semanticLabel:
                             'Stop playing and reset current to slection start',
@@ -165,6 +185,12 @@ class _AudioControlsState extends State<AudioControls> {
     _startScrolling();
 
     return FlutterMidi.playCurrentMidiFile(tempoFactor: _tempoFactor);
+  }
+
+  _tempo(int offsetPercentage) {
+    setState(() {
+      _tempoFactor += offsetPercentage / 100;
+    });
   }
 
   _pause() {

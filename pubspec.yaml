@@ -76,7 +76,7 @@ flutter:
     - assets/locale/locale_fr.json
     - assets/locale/locale_en.json
     - assets/sf2/UprightPianoKW-20190703.sf2
-    - assets/midi/test.mid
+    - assets/midi/demo.mid
 
   fonts:
     - family: Regular

@@ -84,7 +84,7 @@ class Midi {
     return instrument;
   }
 
-  static Future<MidiFileInfo> loadMidi(File midiFile) {
+  static Future<MidiFileInfo> parseMidiForTearingNotes(File midiFile) {
     return Future.sync(() {
       MidiFileInfo midiFileInfo = MidiFileInfo();
       Log.v(LogTag.MIDI, 'Parsing MIDI file ${midiFile.path}');
@@ -196,10 +196,9 @@ class Midi {
     });
   }
 
-  static loadSoundBank(String soundBank) async {
-    FlutterMidi.unmute(); // Optionally Unmute
-    ByteData _byte = await rootBundle.load(soundBank);
-    //FlutterMidi.prepare(sf2: _byte);
+  static configureMidi(String midiFile, String soundBank) async {
+    FlutterMidi.unmute();
+    FlutterMidi.loadMidiFile(midiFilePath: midiFile, soundBankFilePath: soundBank);
   }
 }
 

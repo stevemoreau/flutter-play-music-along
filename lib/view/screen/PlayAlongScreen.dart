@@ -35,30 +35,32 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
   @override
   void initState() {
     super.initState();
-    Midi.loadSoundBank('assets/sf2/UprightPianoKW-20190703.sf2');
 
-    if (widget.audioFile.path == null) {
-      importMidAssetFile().then((midiFileExample) {
-        widget.audioFile.path = midiFileExample;
-        Midi.loadMidi(File(widget.audioFile.path))
-            .then((MidiFileInfo midiFileInfo) => setState(() {
-                  _midiFileInfo = midiFileInfo;
-                }));
-        FlutterMidi.loadMidiFile(path: widget.audioFile.path);
-      });
-    } else {
-      Midi.loadMidi(File(widget.audioFile.path))
-          .then((value) => setState(() {}));
-    }
+    Future.wait([
+      widget.audioFile.path != null
+          ? Future.value(widget.audioFile.path)
+          : importMidAssetFile("assets/midi/demo.mid", "input.mid"),
+      importMidAssetFile(
+          "assets/sf2/UprightPianoKW-20190703.sf2", "soundbank.sf2")
+    ]).then((values) {
+      widget.audioFile.path = values[0];
+      Midi.parseMidiForTearingNotes(File(widget.audioFile.path))
+          .then((MidiFileInfo midiFileInfo) => setState(() {
+                _midiFileInfo = midiFileInfo;
+              }));
+      FlutterMidi.loadMidiFile(
+          midiFilePath: widget.audioFile.path, soundBankFilePath: values[1]);
+    });
   }
 
-  Future<String> importMidAssetFile() async {
+  Future<String> importMidAssetFile(
+      String assetRelativeFilePath, String applicationDocumentsFileName) async {
     Directory directory = await getApplicationDocumentsDirectory();
-    var file = join(directory.path, "file.mid");
+    var file = join(directory.path, applicationDocumentsFileName);
 
     // copy file from Assets folder to Documents folder (only if not already there...)
     if (FileSystemEntity.typeSync(file) == FileSystemEntityType.notFound) {
-      ByteData data = await rootBundle.load("assets/midi/test.mid");
+      ByteData data = await rootBundle.load(assetRelativeFilePath);
       writeToFile(data, file);
     }
 
@@ -73,7 +75,8 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
 
   @override
   Widget build(BuildContext context) {
-    Provider.of<PlaybackNotifier>(this.context, listen: false).setAudioFile(widget.audioFile);
+    Provider.of<PlaybackNotifier>(this.context, listen: false)
+        .setAudioFile(widget.audioFile);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_midiFileInfo.overallHeight > 0) {
