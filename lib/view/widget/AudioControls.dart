@@ -10,6 +10,7 @@ import 'package:play_music_along/utils/Midi.dart';
 import 'package:play_music_along/values/colors.dart';
 import 'package:play_music_along/values/dimens.dart';
 import 'package:provider/provider.dart';
+import 'package:path/path.dart';
 
 class AudioControls extends StatefulWidget {
   final String title;
@@ -49,7 +50,7 @@ class _AudioControlsState extends State<AudioControls> {
             mainAxisAlignment: MainAxisAlignment.end,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Text('Playing ${playbackNotifier.audioFile.path}',
+              Text('Playing ${playbackNotifier.audioFile.path != null ? basename(playbackNotifier.audioFile.path): ''} ',
                   style: TextStyle(
                     fontFamily: 'Bold',
                     color: Colors.white,
