@@ -37,6 +37,15 @@ class _AudioControlsState extends State<AudioControls> {
   double _tempoFactor = 0.2;
 
   @override
+  void initState() {
+    super.initState();
+
+    FlutterMidi.setMethodCallbacks(onLoopRestarted: () {
+      _startScrolling();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Consumer<PlaybackNotifier>(
         builder: (context, playbackNotifier, child) {
@@ -66,7 +75,8 @@ class _AudioControlsState extends State<AudioControls> {
                   children: <Widget>[
                     IconButton(
                         padding: EdgeInsets.all(2),
-                        onPressed: () => _playOrPause(playbackNotifier.selection),
+                        onPressed: () =>
+                            _playOrPause(playbackNotifier.selection),
                         icon: Icon(
                           _playing ? Icons.pause_circle_outline : Icons
                               .play_arrow,
@@ -136,14 +146,16 @@ class _AudioControlsState extends State<AudioControls> {
     String info = 'Tempo: ${(_tempoFactor * 100).round()}%';
 
     if (selection.startNote != null) {
-      info += ', Selection: ' + _getHumanReadableDuration(
-          durationInMicroSeconds: _getDurationInMicroSecondsForCurrentTempo(
-              selection.startNote.absoluteTickStart));
+      info += ', Selection: ' +
+          _getHumanReadableDuration(
+              durationInMicroSeconds: _getDurationInMicroSecondsForCurrentTempo(
+                  selection.startNote.absoluteTickStart));
     }
     if (selection.endNote != null) {
-      info += ' → ' + _getHumanReadableDuration(
-          durationInMicroSeconds: _getDurationInMicroSecondsForCurrentTempo(
-              selection.endNote.absoluteTickEnd));
+      info += ' → ' +
+          _getHumanReadableDuration(
+              durationInMicroSeconds: _getDurationInMicroSecondsForCurrentTempo(
+                  selection.endNote.absoluteTickEnd));
     }
 
     return info;
@@ -202,8 +214,8 @@ class _AudioControlsState extends State<AudioControls> {
   String _getHumanReadableDuration({int durationInMicroSeconds}) {
     final date = DateTime.fromMicrosecondsSinceEpoch(durationInMicroSeconds);
     final humanReadableFormat = DateFormat("m''''s\"");
-    return '${humanReadableFormat.format(
-        date)}.${date.millisecond}${date.microsecond}';
+    return '${humanReadableFormat.format(date)}.${date.millisecond}${date
+        .microsecond}';
   }
 
   double get getPositionInTicks =>
@@ -213,14 +225,25 @@ class _AudioControlsState extends State<AudioControls> {
 
   _getDurationInMicroSecondsForCurrentTempo(durationInTicks) =>
       (durationInTicks *
-          widget.midiFileInfo.measure.tickDurationInMicroSeconds / _tempoFactor)
+          widget.midiFileInfo.measure.tickDurationInMicroSeconds /
+          _tempoFactor)
           .round();
 
-  _startScrolling(startOffset) {
-    double remainingExtend = widget.scrollController.position.maxScrollExtent - startOffset;
+  _startScrolling() {
+    PlaybackSelection selection = Provider
+        .of<PlaybackNotifier>(this.context)
+        .selection;
+    double startTickPosition = selection.startNote != null
+        ? selection.startNote.absoluteTickStart
+        : getPositionInTicks;
+
+    double startOffset = widget.midiFileInfo.getViewDimension(
+        durationInTicks: startTickPosition);
+
+    double remainingExtend =
+        widget.scrollController.position.maxScrollExtent - startOffset;
     widget.scrollController.jumpTo(remainingExtend);
-    int scrollDuration =
-    _getDurationInMicroSecondsForCurrentTempo(
+    int scrollDuration = _getDurationInMicroSecondsForCurrentTempo(
         widget.midiFileInfo.getTicks(viewDimension: remainingExtend));
 
     Log.v(LogTag.MIDI,
@@ -238,12 +261,15 @@ class _AudioControlsState extends State<AudioControls> {
   Future _play(PlaybackSelection selection) {
     Log.i(LogTag.MIDI, 'Start playing');
     widget.panelController.animatePanelToPosition(0);
-    double startTickPosition = selection.startNote != null ? selection.startNote.absoluteTickStart : getPositionInTicks;
-    _startScrolling(widget.midiFileInfo.getViewDimension(durationInTicks: startTickPosition));
+    double startTickPosition = selection.startNote != null
+        ? selection.startNote.absoluteTickStart
+        : getPositionInTicks;
+    _startScrolling();
     Provider.of<PlaybackNotifier>(this.context).startPlaying();
     return FlutterMidi.playCurrentMidiFile(
         initialTickPosition: startTickPosition,
-        endTickPosition: selection.endNote != null ? selection.endNote.absoluteTickEnd : -1,
+        endTickPosition:
+        selection.endNote != null ? selection.endNote.absoluteTickEnd : -1,
         tempoFactor: _tempoFactor);
   }
 

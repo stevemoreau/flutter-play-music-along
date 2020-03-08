@@ -13,7 +13,8 @@ abstract class Visualizer extends StatefulWidget {
 }
 
 abstract class VisualizerState<T extends Visualizer> extends State<T> {
-  @protected final Set activeNotes = Set<String>();
+  @protected
+  final Set activeNotes = Set<String>();
 
   @override
   void initState() {
@@ -23,22 +24,24 @@ abstract class VisualizerState<T extends Visualizer> extends State<T> {
       Log.v(LogTag.MIDI, '------- Event received $event');
       List<int> bytes = event.toList();
 
-      // FIXME smoreau: raw events are raised from native code, but
-      // dart_midi parser needs more information to parse properly
-      // It is probably not a good idea to rely on parseTrack as it is
+      // FIXME smoreau: raw events are raised from native code, but dart_midi
+      // parser needs more information to parse properly (leading int set to 0)
+      // It is probably not a good idea to rely on parseTrack as it is.
       // Would need to dig midi parsing or to adapt the dart_midi lib to parse
-      // atom events
+      // atom events.
       // Example: NoteOn from native Android: 3-byte Uint8List [0x91, 0x40, 0x5F]
       try {
         MidiEvent midiEvent = Midi.midiParser.parseTrack([0]..addAll(bytes))[0];
         if (midiEvent is NoteOnEvent) {
-          String pitchName = Pitch.fromMidiNumber(midiEvent.noteNumber).toString();
+          String pitchName =
+              Pitch.fromMidiNumber(midiEvent.noteNumber).toString();
 
           setState(() {
             activeNotes.add(pitchName);
           });
         } else if (midiEvent is NoteOffEvent) {
-          String pitchName = Pitch.fromMidiNumber(midiEvent.noteNumber).toString();
+          String pitchName =
+              Pitch.fromMidiNumber(midiEvent.noteNumber).toString();
 
           setState(() {
             activeNotes.remove(pitchName);
