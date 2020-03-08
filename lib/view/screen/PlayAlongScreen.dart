@@ -86,8 +86,8 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
       if (_midiFileInfo.overallHeight > 0) {
         Log.v(LogTag.MIDI, 'Build done, ready to play file');
         // Provider.of<PlaybackNotifier>(context, listen: false).readyToPlay();
-        var maxExtend = _verticalScrollController.position.maxScrollExtent;
-        _verticalScrollController.jumpTo(maxExtend);
+//        var maxExtend = _verticalScrollController.position.maxScrollExtent;
+//        _verticalScrollController.jumpTo(maxExtend);
       }
     });
 

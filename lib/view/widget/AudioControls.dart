@@ -152,6 +152,9 @@ class _AudioControlsState extends State<AudioControls> {
     return '${durationInMicroSeconds}us (${humanReadableFormat.format(date)}.${date.millisecond}${date.microsecond})';
   }
 
+  double get getPositionInTicks => widget.midiFileInfo
+      .getTicks(viewDimension: widget.scrollController.position.maxScrollExtent - widget.scrollController.offset);
+
   _startScrolling() {
     double remainingExtend = widget.scrollController.offset;
     int scrollDuration =
@@ -176,7 +179,7 @@ class _AudioControlsState extends State<AudioControls> {
     widget.panelController.animatePanelToPosition(0);
     _startScrolling();
     Provider.of<PlaybackNotifier>(this.context).startPlaying();
-    return FlutterMidi.playCurrentMidiFile(tempoFactor: _tempoFactor);
+    return FlutterMidi.playCurrentMidiFile(initialTickPosition: getPositionInTicks, tempoFactor: _tempoFactor);
   }
 
   _tempo(int offsetPercentage) {
@@ -185,7 +188,7 @@ class _AudioControlsState extends State<AudioControls> {
     });
   }
 
-  _pause() {
+  Future _pause() {
     setState(() {
       _playing = false;
     });
@@ -202,6 +205,6 @@ class _AudioControlsState extends State<AudioControls> {
     Log.i(LogTag.AUDIO_CONTROLS, '[STOP]');
 
     _scrollToStart();
-    _pause();
+    return _pause();
   }
 }
