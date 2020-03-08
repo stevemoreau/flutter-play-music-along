@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:play_music_along/notifier/PlaybackNotifier.dart';
 import 'package:play_music_along/utils/Midi.dart';
+import 'package:provider/provider.dart';
 
 class TearingNote extends StatelessWidget {
   final double width;
@@ -29,19 +31,28 @@ class TearingNote extends StatelessWidget {
           durationInTicks: note.absoluteStartOffsetInTicks),
       child: ClipRRect(
         borderRadius: borderRadius,
-        child: Container(
-            height: height,
-            padding: EdgeInsets.only(bottom: 5),
-            color: note is Rest ? Colors.transparent : MidiPitch(midiNumber: midiNumber).pitchColor,
-            width: width,
-            child: Align(
-                alignment: FractionalOffset.bottomCenter,
-                child: Text(
-                  pitch.toString(),
-                  style: TextStyle(fontSize: 8, color: Colors.white),
-                  textAlign: TextAlign.center,
-                ))),
+        child: GestureDetector(
+          onTap: () => _selectNote(context),
+          child: Container(
+              height: height,
+              padding: EdgeInsets.only(bottom: 5),
+              color: note is Rest
+                  ? Colors.transparent
+                  : MidiPitch(midiNumber: midiNumber).pitchColor,
+              width: width,
+              child: Align(
+                  alignment: FractionalOffset.bottomCenter,
+                  child: Text(
+                    pitch.toString(),
+                    style: TextStyle(fontSize: 8, color: Colors.white),
+                    textAlign: TextAlign.center,
+                  ))),
+        ),
       ),
     );
+  }
+
+  _selectNote(BuildContext context) {
+    Provider.of<PlaybackNotifier>(context).setSelectedNote(this.note);
   }
 }

@@ -49,6 +49,8 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
           "assets/sf2/UprightPianoKW-20190703.sf2", "soundbank.sf2")
     ]).then((values) {
       widget.audioFile.path = values[0];
+      Provider.of<PlaybackNotifier>(this.context).setAudioFile(widget.audioFile);
+
       Midi.parseMidiForTearingNotes(File(widget.audioFile.path))
           .then((MidiFileInfo midiFileInfo) => setState(() {
                 _midiFileInfo = midiFileInfo;
@@ -80,7 +82,6 @@ class _PlayAlongScreenState extends State<PlayAlongScreen> {
 
   @override
   Widget build(BuildContext context) {
-    Provider.of<PlaybackNotifier>(this.context).setAudioFile(widget.audioFile);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_midiFileInfo.overallHeight > 0) {

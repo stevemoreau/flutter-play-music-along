@@ -31,6 +31,8 @@ class Note {
       {this.durationInTicks, this.midiNumber});
 
   Pitch get pitch => Pitch.fromMidiNumber(midiNumber);
+  double get absoluteTickStart => absoluteStartOffsetInTicks;
+  double get absoluteTickEnd => absoluteStartOffsetInTicks + durationInTicks;
 
   @override
   String toString() {
@@ -51,12 +53,13 @@ class MidiNumberRange {
 
   MidiNumberRange({this.min, this.max});
 
-  int get count => max - min + 1;
+  // FIXME smoreau: probably badly designed here, refactor transition between home and rendering
+  int get count => min == null || max == null ? 0 : max - min + 1;
 
   int midiNumber(int index) => min + index;
 
   int get octaveStart => Pitch.fromMidiNumber(min).octave - 1;
-  int get octaveCount =>
+  int get octaveCount => min == null || max == null ? 0 :
       Pitch.fromMidiNumber(max).octave - Pitch.fromMidiNumber(min).octave + 1;
 
   updateRange(int noteNumber) {

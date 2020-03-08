@@ -33,8 +33,7 @@ class PianoVisualizerState extends VisualizerState<PianoVisualizer> {
   Widget build(BuildContext context) {
     return Consumer<PlaybackNotifier>(
         builder: (context, playbackNotifier, child) {
-      if (!playbackNotifier.audioFile.playing) {
-
+      if (playbackNotifier.audioFile == null || !playbackNotifier.audioFile.playing) {
         activeNotes.clear();
       }
 
