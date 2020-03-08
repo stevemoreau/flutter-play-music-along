@@ -9,9 +9,9 @@ import 'package:play_music_along/notifier/PlaybackNotifier.dart';
 import 'package:play_music_along/utils/Log.dart';
 import 'package:play_music_along/utils/Midi.dart';
 import 'package:play_music_along/values/colors.dart';
-import 'package:play_music_along/values/dimens.dart';
 import 'package:provider/provider.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
+import 'package:wakelock/wakelock.dart';
 
 class AudioControls extends StatefulWidget {
   final String title;
@@ -260,6 +260,7 @@ class _AudioControlsState extends State<AudioControls> {
 
   Future _play(PlaybackSelection selection) {
     Log.i(LogTag.MIDI, 'Start playing');
+    Wakelock.enable();
     widget.panelController.animatePanelToPosition(0);
     double startTickPosition = selection.startNote != null
         ? selection.startNote.absoluteTickStart
@@ -284,6 +285,7 @@ class _AudioControlsState extends State<AudioControls> {
       _playing = false;
     });
 
+    Wakelock.disable();
     Provider.of<PlaybackNotifier>(this.context).stopPlaying();
 
     // FIXME smoreau: right way to cancel the scroll ? cancel the promise ?
